@@ -37,17 +37,23 @@ void BitStream::WriteBits64(uint64_t value, uint8_t bitsToStore)
 
 uint32_t BitStream::ReadBit() 
 {
-    return BitUtils::ReadBit(buffer_, bitsPosition_);
+	auto result = BitUtils::ReadBit(buffer_, bitsPosition_);
+	++bitsPosition_;
+	return result;
 }
 
 uint32_t BitStream::ReadBits32(uint8_t bitsToRead)
 {
-    return BitUtils::ReadBits32(buffer_, bitsPosition_, bitsToRead);
+    auto result = BitUtils::ReadBits32(buffer_, bitsPosition_, bitsToRead);
+	bitsPosition_ += bitsToRead;
+	return result;
 }
 
 uint64_t BitStream::ReadBits64(uint8_t bitsToRead)
 {
-    return BitUtils::ReadBits64(buffer_, bitsPosition_, bitsToRead);
+	auto result = BitUtils::ReadBits64(buffer_, bitsPosition_, bitsToRead);
+	bitsPosition_ += bitsToRead;
+	return result;
 }
 
 }} //end of namespace

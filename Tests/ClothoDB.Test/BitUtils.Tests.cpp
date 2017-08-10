@@ -34,7 +34,29 @@ namespace ClothDBTest
             Assert::AreEqual(1, (int)result6);
             Assert::AreEqual(0, (int)result7);
         }
-        TEST_METHOD(ReadHiBits)
+		TEST_METHOD(ReadWriteBit)
+		{
+			BitStream buffer(10);
+			buffer.WriteBits32(0b10101010, 13);
+			buffer.WriteBit(1);
+			buffer.WriteBit(0);
+			buffer.WriteBit(1);
+
+			buffer.Seal();
+			buffer.SetPosition(0);
+
+			auto result0 = buffer.ReadBits32(13);
+			auto result1 = buffer.ReadBit();
+			auto result2 = buffer.ReadBit();
+			auto result3 = buffer.ReadBit();
+
+			Assert::AreEqual(0b10101010, (int)result0);
+			Assert::AreEqual(1, (int)result1);
+			Assert::AreEqual(0, (int)result2);
+			Assert::AreEqual(1, (int)result3);
+		}
+
+		TEST_METHOD(ReadHiBits)
         {
             auto result1 = BitUtils::ReadHiBits(0b10101010, 1);
             auto result2 = BitUtils::ReadHiBits(0b10101010, 2);

@@ -38,7 +38,7 @@ std::vector<TimeSeriesPoint> BitStreamDecompressor::Decompress(const std::shared
 {
     stream->SetPosition(0);
     uint32_t timestamp = stream->ReadBits32(BitStreamConstants::kFirstTimestampBits);
-    uint32_t prevTimestampDelta = BitStreamConstants::kDefaultDelta;
+    uint32_t prevTimestampDelta = 0;
     uint32_t deltaOfDelta = 0;
 
     TimeSeriesPoint point;
@@ -64,7 +64,7 @@ std::vector<uint32_t> BitStreamDecompressor::DecompressTimeStampts(const std::sh
 {
     stream->SetPosition(0);
     uint32_t timestamp = stream->ReadBits32(BitStreamConstants::kFirstTimestampBits);
-    uint32_t prevDelta = BitStreamConstants::kDefaultDelta;
+    uint32_t prevDelta = 0;
     uint32_t deltaOfDelta = 0;
 
     std::vector<uint32_t> result;

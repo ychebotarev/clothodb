@@ -18,8 +18,10 @@ public:
     BitStreamCompressor(std::shared_ptr<BitStream> stream);
     ~BitStreamCompressor();
 
-    bool Append(const TimeSeriesPoint& value);
-    bool Append(int32_t unixTime, double value);
+    bool Append(const TimeSeriesPoint& dataPoint);
+    bool Append(int32_t timestamp, double value);
+
+	static std::shared_ptr<BitStream> CompressTimestamps(std::vector<uint32_t> timestamps);
 protected:
     void AppendTimestamp(int32_t timestamp);
     void AppendValue(int64_t value);

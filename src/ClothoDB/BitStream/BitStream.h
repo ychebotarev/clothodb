@@ -49,8 +49,10 @@ public:
     uint32_t GetCapacity() const { return capacity_; }
 
     void SetLength(uint32_t bitsLength) { bitsLength_ = bitsLength; }
-    void FixPosition() { bitsLength_ = bitsPosition_; }
-    uint32_t GetLength() const { return bitsLength_; }
+	uint32_t GetLength() const { return bitsLength_; }
+	
+	void FixPosition() { bitsLength_ = bitsPosition_; }
+	void Seal() { FixPosition(); }
 
     uint32_t CanRead() const { return bitsPosition_ < bitsLength_; }
 };

@@ -35,6 +35,33 @@ static constexpr int DELTAD_13_MASK = 0x07 << 13;
 
 //(e) Otherwise store ‘111’ followed by the value (13 bits)
 
+__inline void StoreDeltaOfDelta(uint32_t deltaOfDelta, std::shared_ptr<BitStream>& stream)
+{
+	if (deltaOfDelta == 0)
+	{
+		stream->WriteBit(0);
+		return;
+	}
+
+	deltaOfDelta = BitUtils::EncodeZigZag32(deltaOfDelta);
+	--deltaOfDelta;
+
+	if (deltaOfDelta < 0x80)//7 bit
+	{
+		// '10' followed by a DofD if DofD is in range [0,127]
+		stream->WriteBits32(deltaOfDelta | DELTAD_7_MASK, 9);
+	}
+	else if (deltaOfDelta <= 0x200) //9 bits
+	{
+		// '110' followed by a by a DofD if DofD is in range [128, 511]
+		stream->WriteBits32(deltaOfDelta | DELTAD_9_MASK, 12);
+	}
+	else
+	{
+		// '111' followed by a value, 13 bits.
+		stream->WriteBits32(deltaOfDelta | DELTAD_13_MASK, 16);
+	}
+}
 
 BitStreamCompressor::BitStreamCompressor(std::shared_ptr<BitStream> stream)
 {
@@ -45,53 +72,36 @@ BitStreamCompressor::~BitStreamCompressor()
 {
 }
 
-// Store a delta of delta (DofD) using the following rules:
-// '0' = DofD did not change
-// '10' followed by a DofD if DofD is in range [0,127]
-// '110' followed by a by a DofD if DofD is in range [128, 511]
-// '111' followed by a value, 13 bits.
+bool BitStreamCompressor::Append(const TimeSeriesPoint& dataPoint)
+{
+	AppendTimestamp(dataPoint.timestamp_);
+	AppendValue(*((uint64_t*)&dataPoint.value_));
+	return true;
+}
+
+bool BitStreamCompressor::Append(int32_t timestamp, double value)
+{
+	AppendTimestamp(timestamp);
+	AppendValue(*((uint64_t*)&value));
+	return true;
+}
+
 void BitStreamCompressor::AppendTimestamp(int32_t timestamp) 
 {
     if (stream_->GetPosition() == 0) 
     {
         stream_->WriteBits32(timestamp, BitStreamConstants::kFirstTimestampBits);
         prevTimestamp_ = timestamp;
-        prevTimestampDelta_ = BitStreamConstants::kDefaultDelta;
+        prevTimestampDelta_ = 0;
         return;
     }
 
     int32_t delta = timestamp - prevTimestamp_;
-    int32_t deltaD = delta - prevTimestampDelta_;
 
-    if (deltaD == 0) 
-    {
-        prevTimestamp_ = timestamp;
-        stream_->WriteBit(0);
-        return;
-    }
+	StoreDeltaOfDelta(delta - prevTimestampDelta_, stream_);
 
-    deltaD = BitUtils::EncodeZigZag32(deltaD);
-    --deltaD;
-    prevTimestamp_ = timestamp;
-    prevTimestampDelta_ = delta;
-
-    if (deltaD < 0x80)//7 bit
-    {
-        // '10' followed by a DofD if DofD is in range [0,127]
-        stream_->WriteBits32(deltaD | DELTAD_7_MASK, 9);
-        return;
-    }
-
-    if (deltaD <= 0x200) //9 bits
-    {
-        // '110' followed by a by a DofD if DofD is in range [128, 511]
-        stream_->WriteBits32(deltaD | DELTAD_9_MASK, 12);
-        return;
-    }
-
-    // '111' followed by a value, 13 bits.
-    stream_->WriteBits32(deltaD | DELTAD_13_MASK, 16);
-    return;
+	prevTimestamp_ = timestamp;
+	prevTimestampDelta_ = delta;
 }
 
 // Values are encoded by XORing them with the previous value.  
@@ -157,6 +167,26 @@ void BitStreamCompressor::AppendValue(int64_t value)
         prevValueLZ_ = leadingZeros;
     }
     prevValue_ = value;
+}
+
+std::shared_ptr<BitStream> BitStreamCompressor::CompressTimestamps(std::vector<uint32_t> timestamps)
+{
+	std::shared_ptr<BitStream> stream(new BitStream(timestamps.size() / 4));
+
+	stream->WriteBits32(timestamps[0], BitStreamConstants::kFirstTimestampBits);
+	uint32_t prevTimestamp = timestamps[0];
+	uint32_t prevTimestampDelta = 0;
+
+	for (int i = 1; i < timestamps.size(); ++i)
+	{
+		int32_t delta = timestamps[i] - prevTimestamp;
+
+		StoreDeltaOfDelta(delta - prevTimestampDelta, stream);
+		prevTimestamp = timestamps[i];
+		prevTimestampDelta = delta;
+	}
+
+	return stream;
 }
 
 }}
