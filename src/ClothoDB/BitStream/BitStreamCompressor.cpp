@@ -1,3 +1,5 @@
+#include <limits>
+
 #include "BitStreamCompressor.h"
 
 #include "BitStreamConstants.h"
@@ -66,6 +68,10 @@ __inline void StoreDeltaOfDelta(uint32_t deltaOfDelta, std::shared_ptr<BitStream
 BitStreamCompressor::BitStreamCompressor(std::shared_ptr<BitStream> stream)
 {
     stream_ = stream;
+    //prevValue_ = std::numeric_limits<uint64_t>::max();
+    prevValue_ = 0;
+    prevValueTZ_ = 0;
+    prevValueLZ_ = 0;
 }
 
 BitStreamCompressor::~BitStreamCompressor()
@@ -121,8 +127,9 @@ void BitStreamCompressor::AppendTimestamp(int32_t timestamp)
 //    bits, then length of the XORred value is stored in the next 6
 //    bits and finally the XORred value is stored.
 
-void BitStreamCompressor::AppendValue(int64_t value)
+void BitStreamCompressor::AppendValue(double dValue)
 {
+    uint64_t value = *(uint64_t*)&dValue;
     uint64_t xorValue = prevValue_ ^ value;
 
     if (xorValue == 0) 
@@ -148,7 +155,7 @@ void BitStreamCompressor::AppendValue(int64_t value)
         && trailingZeros >= prevValueTZ_ 
         && prevBlockBits < BitStreamConstants::kBlockSizeLengthBits + blockBits)
     {
-        stream_->WriteBits32(1, 1);
+        stream_->WriteBit(1);
 
         uint64_t blockValue = xorValue >> prevValueTZ_;
         stream_->WriteBits64(blockValue, prevBlockBits);
@@ -156,9 +163,9 @@ void BitStreamCompressor::AppendValue(int64_t value)
     else
     {
         stream_->WriteBit(0);
-        stream_->WriteBits64(leadingZeros, BitStreamConstants::kLeadingZerosLengthBits);
+        stream_->WriteBits32(leadingZeros, BitStreamConstants::kLeadingZerosLengthBits);
 
-        stream_->WriteBits64(blockBits - 1, BitStreamConstants::kBlockSizeLengthBits);
+        stream_->WriteBits32(blockBits - 1, BitStreamConstants::kBlockSizeLengthBits);
 
         uint64_t blockValue = xorValue >> trailingZeros;
         stream_->WriteBits64(blockValue, blockBits);
@@ -169,9 +176,9 @@ void BitStreamCompressor::AppendValue(int64_t value)
     prevValue_ = value;
 }
 
-std::shared_ptr<BitStream> BitStreamCompressor::CompressTimestamps(std::vector<uint32_t> timestamps)
+std::shared_ptr<BitStream> BitStreamCompressor::CompressTimestamps(const std::vector<uint32_t>& timestamps)
 {
-	std::shared_ptr<BitStream> stream(new BitStream(timestamps.size() / 4));
+	std::shared_ptr<BitStream> stream(new BitStream((timestamps.size() / 2)+2));
 
 	stream->WriteBits32(timestamps[0], BitStreamConstants::kFirstTimestampBits);
 	uint32_t prevTimestamp = timestamps[0];
@@ -187,6 +194,16 @@ std::shared_ptr<BitStream> BitStreamCompressor::CompressTimestamps(std::vector<u
 	}
 
 	return stream;
+}
+
+std::shared_ptr<BitStream> BitStreamCompressor::CompressValues(const std::vector<double>& values)
+{
+    std::shared_ptr<BitStream> stream(new BitStream(values.size() * 2));
+
+    BitStreamCompressor compressor(stream);
+    for (auto value : values) compressor.AppendValue(value);
+
+    return stream;
 }
 
 }}

@@ -21,10 +21,11 @@ public:
     bool Append(const TimeSeriesPoint& dataPoint);
     bool Append(int32_t timestamp, double value);
 
-	static std::shared_ptr<BitStream> CompressTimestamps(std::vector<uint32_t> timestamps);
+	static std::shared_ptr<BitStream> CompressTimestamps(const std::vector<uint32_t>& timestamps);
+    static std::shared_ptr<BitStream> CompressValues(const std::vector<double>& values);
 protected:
     void AppendTimestamp(int32_t timestamp);
-    void AppendValue(int64_t value);
+    void AppendValue(double value);
 
 private:
     std::shared_ptr<BitStream> stream_;

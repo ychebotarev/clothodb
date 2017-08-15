@@ -15,7 +15,17 @@ const int mask[] =
     ((1 << 6) - 1),
     ((1 << 7) - 1)
 };
-static unsigned char bitPositionMask[] = { 128, 64, 32, 16, 8, 4, 2, 1 };
+static unsigned char bitPositionMask[] = 
+{ 
+    1 , 
+    1 << 1,
+    1 << 2,
+    1 << 3,
+    1 << 4,
+    1 << 5,
+    1 << 6,
+    1 << 7
+};
 
 //top = (n >> (8-bitsToRead)) & ((1 << bitsToRead) - 1)
 uint8_t BitUtils::ReadHiBits(uint8_t byte, uint8_t bitsToRead)
@@ -38,7 +48,7 @@ uint8_t BitUtils::ReadMidBits(uint8_t byte, uint8_t start, uint8_t bitsToRead)
 }
 
 void BitUtils::WriteBits32(
-    std::unique_ptr<uint8_t[]>& buffer,
+    std::vector<uint8_t>& buffer,
     uint32_t bitPosision,
     uint32_t value,
     uint8_t bitsToStore)
@@ -47,7 +57,7 @@ void BitUtils::WriteBits32(
 }
 
 void BitUtils::WriteBits64(
-    std::unique_ptr<uint8_t[]>& buffer,
+    std::vector<uint8_t>& buffer,
     uint32_t bitPosision,
     uint64_t value,
     uint8_t bitsToStore)
@@ -57,7 +67,7 @@ void BitUtils::WriteBits64(
 
 template <typename T>
 void BitUtils::WriteBits(
-    std::unique_ptr<uint8_t[]>& buffer,
+    std::vector<uint8_t>& buffer,
     uint32_t bitPosision,
     T value,
     uint8_t bitsToStore)
@@ -97,16 +107,18 @@ void BitUtils::WriteBits(
 }
 
 uint32_t BitUtils::ReadBit(
-    const std::unique_ptr<uint8_t[]>& buffer,
+    const std::vector<uint8_t>& buffer,
     uint32_t bitPosision)
 {
     int bufferLength = bitPosision >> 3;
-    bitPosision = (bitPosision & 0x7) ? (8 - (bitPosision & 0x7)) : 0;
-    return ((buffer[bufferLength] & bitPositionMask[bitPosision]) != 0);
+    bitPosision &= 0x7;
+    bitPosision = 7 - bitPosision;
+    auto ch = buffer[bufferLength];
+    return ((ch & bitPositionMask[bitPosision]) != 0);
 }
 
 uint32_t BitUtils::ReadBits32(
-    const std::unique_ptr<uint8_t[]>& buffer,
+    const std::vector<uint8_t>& buffer,
     uint32_t bitPosision,
     uint8_t bitsToRead)
 {
@@ -114,7 +126,7 @@ uint32_t BitUtils::ReadBits32(
 }
 
 uint64_t BitUtils::ReadBits64(
-    const std::unique_ptr<uint8_t[]>& buffer,
+    const std::vector<uint8_t>& buffer,
     uint32_t bitPosision,
     uint8_t bitsToRead)
 {
@@ -123,7 +135,7 @@ uint64_t BitUtils::ReadBits64(
 
 template <typename T>
 T BitUtils::ReadBits(
-    const std::unique_ptr<uint8_t[]>& buffer,
+    const std::vector<uint8_t>& buffer,
     uint32_t bitPosision,
     uint8_t bitsToRead)
 {

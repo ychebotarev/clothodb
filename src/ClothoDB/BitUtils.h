@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <vector>
 #include <intrin.h>
 
 namespace incolun{
@@ -13,28 +14,28 @@ public:
     // Write specified number of bits from value into byte buffer
     // bitPosision indicates starting position in bits
     static void WriteBits32(
-        std::unique_ptr<uint8_t[]>& buffer,
+        std::vector<uint8_t>& buffer,
         uint32_t bitPosision,
         uint32_t value,
         uint8_t bitsToStore);
 
     static void WriteBits64(
-        std::unique_ptr<uint8_t[]>& buffer,
+        std::vector<uint8_t>& buffer,
         uint32_t bitPosision,
         uint64_t value,
         uint8_t bitsToStore);
 
     static uint32_t ReadBit(
-        const std::unique_ptr<uint8_t[]>& buffer,
+        const std::vector<uint8_t>& buffer,
         uint32_t bitPosision);
 
     static uint32_t ReadBits32(
-        const std::unique_ptr<uint8_t[]>& buffer,
+        const std::vector<uint8_t>& buffer,
         uint32_t bitPosision,
         uint8_t bitsToRead);
 
     static uint64_t ReadBits64(
-        const std::unique_ptr<uint8_t[]>& buffer,
+        const std::vector<uint8_t>& buffer,
         uint32_t bitPosision,
         uint8_t bitsToRead);
 
@@ -121,17 +122,16 @@ public:
 private:
     template <typename T>
     static void WriteBits(
-        std::unique_ptr<uint8_t[]>& buffer,
+        std::vector<uint8_t>& buffer,
         uint32_t bitPosision,
         T value,
         uint8_t bitsToStore);
 
     template <typename T>
     static T ReadBits(
-        const std::unique_ptr<uint8_t[]>& buffer,
+        const std::vector<uint8_t>& buffer,
         uint32_t bitPosision,
         uint8_t bitsToRead);
-
 };
 
 }} ////end of incolun::clothodb

@@ -12,10 +12,47 @@ namespace ClothDBTest
 	TEST_CLASS(BitUtilsTests)
 	{
 	public:
+        TEST_METHOD(BitUtilsTestsDummy)
+        {
+            BitStream stream(10);
+            stream.WriteBits32(1, 13);
+            stream.WriteBits32(257, 9);
+            stream.SetPosition(13);
+            auto result = stream.ReadBit();
+            stream.SetPosition(13);
+            auto result1 = stream.ReadBits32(9);
+            Assert::AreEqual(1, (int)result);
+            Assert::AreEqual(257, (int)result1);
+        }
+
+        TEST_METHOD(TestBitStreamCapacity)
+        {
+            BitStream stream(10);
+            for (uint64_t i = 0; i < 100; ++i)
+            {
+                stream.WriteBits32((uint32_t)i, 32);
+                stream.WriteBits64(i, 64);
+            }
+
+            stream.SetPosition(0);
+
+            for (uint64_t i = 0; i < 100; ++i)
+            {
+                auto result32 = stream.ReadBits32(32);
+                auto result64 = stream.ReadBits64(64);
+                Assert::AreEqual((uint32_t)i, result32);
+                Assert::AreEqual(i, result64);
+            }
+        }
+        
         TEST_METHOD(ReadBit)
         {
-            auto buffer = std::make_unique<uint8_t[]>(10);
+            auto buffer = std::vector<uint8_t>(10);
+            
             BitUtils::WriteBits32(buffer, 0, 0b10101010, 8);
+            BitUtils::WriteBits32(buffer, 8, 1, 1);
+            BitUtils::WriteBits32(buffer, 9, 0, 1);
+            
             auto result0 = BitUtils::ReadBit(buffer, 0);
             auto result1 = BitUtils::ReadBit(buffer, 1);
             auto result2 = BitUtils::ReadBit(buffer, 2);
@@ -24,6 +61,8 @@ namespace ClothDBTest
             auto result5 = BitUtils::ReadBit(buffer, 5);
             auto result6 = BitUtils::ReadBit(buffer, 6);
             auto result7 = BitUtils::ReadBit(buffer, 7);
+            auto result8 = BitUtils::ReadBit(buffer, 8);
+            auto result9 = BitUtils::ReadBit(buffer, 9);
 
             Assert::AreEqual(1, (int)result0);
             Assert::AreEqual(0, (int)result1);
@@ -33,6 +72,9 @@ namespace ClothDBTest
             Assert::AreEqual(0, (int)result5);
             Assert::AreEqual(1, (int)result6);
             Assert::AreEqual(0, (int)result7);
+
+            Assert::AreEqual(1, (int)result8);
+            Assert::AreEqual(0, (int)result9);
         }
 		TEST_METHOD(ReadWriteBit)
 		{
@@ -126,7 +168,7 @@ namespace ClothDBTest
 
         TEST_METHOD(WriteOneBitSingle)
 		{
-            auto buffer = std::make_unique<uint8_t[]>(10);
+            std::vector<uint8_t> buffer(10);
             uint32_t storedBits = 0;
 
             BitUtils::WriteBits32(buffer, storedBits, 0b101, 1);
@@ -135,7 +177,7 @@ namespace ClothDBTest
         }
         TEST_METHOD(WriteOneBitMultiple)
         {
-            auto buffer = std::make_unique<uint8_t[]>(10);
+            std::vector<uint8_t> buffer(10);
             uint32_t storedBits = 0;
 
             for (int i = 0; i < 9; ++i)
@@ -148,7 +190,7 @@ namespace ClothDBTest
         }
         TEST_METHOD(WriteTwoBitWithOwerflow)
         {
-            auto buffer = std::make_unique<uint8_t[]>(10);
+            std::vector<uint8_t> buffer(10);
             uint32_t storedBits = 7;
 
             BitUtils::WriteBits32(buffer, storedBits, 0b11, 2);
@@ -158,7 +200,7 @@ namespace ClothDBTest
         }
         TEST_METHOD(WriteFiveBitsMultiple)
 		{
-            auto buffer = std::make_unique<uint8_t[]>(10);
+            std::vector<uint8_t> buffer(10);
             uint32_t storedBits = 0;
 
             BitUtils::WriteBits32(buffer, storedBits, 0b10001, 5); storedBits += 5;//17
@@ -173,7 +215,7 @@ namespace ClothDBTest
 
         TEST_METHOD(WriteSixtlyFourBitsSingleWithOverflow)
         {
-            auto buffer = std::make_unique<uint8_t[]>(10);
+            std::vector<uint8_t> buffer(10);
             uint32_t storedBits = 1;
             uint64_t value = UINT64_MAX;
 

@@ -12,7 +12,7 @@ public:
     ~TimeSeriesPoint() {};
 
     int32_t timestamp_;
-    int64_t value_;
+    double value_;
 };
 
 }}//incolun::clothodb
