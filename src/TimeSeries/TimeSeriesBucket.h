@@ -20,7 +20,9 @@ public:
     void Reset();
     void AddValue(uint64_t value, uint32_t timestamp);
 
-    void Decompress(std::vector<TimeSeriesPoint>& points, 
+    void Decompress(
+        uint32_t toDecompress,
+        std::vector<TimeSeriesPoint>& points, 
         uint64_t baseTime,
         uint64_t startTime,
         uint64_t endTime);

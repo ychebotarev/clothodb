@@ -69,11 +69,21 @@ TimeSeriesPoints TimeSeries::GetPoints(uint64_t startTime, uint64_t endTime)
         uint64_t startHour = m_startHour;
         uint64_t endHour = startHour + Constants::kOneHourInMs;
         
-        SRWLockShared lock(m_srwLock);
         do {
             if (endHour < startTime || startHour >=endTime) break;
 
-            m_buckets[bucket]->Decompress(*result.get(), startHour, startTime, endTime);
+            uint32_t toDecompress = 0;
+            if (m_buckets[bucket]->IsSealed())
+            {
+                toDecompress = m_buckets[bucket]->GetStream()->GetLength();
+            }
+            else
+            {
+                SRWLockShared lock(m_srwLock);
+                toDecompress = m_buckets[bucket]->GetStream()->GetPosition();
+
+            }
+            m_buckets[bucket]->Decompress(toDecompress, *result.get(), startHour, startTime, endTime);
             startHour += Constants::kOneHourInMs;
             endHour += Constants::kOneHourInMs;
             ++bucket;
@@ -88,7 +98,7 @@ TimeSeriesPoints TimeSeries::GetPoints(uint64_t startTime, uint64_t endTime)
     }
     catch(...)
     {
-        return TimeSeriesPoints::fromError(ErrorCodes::kBitStreamOverflaw);
+        return TimeSeriesPoints::fromError(ErrorCodes::kBitStreamUnknown);
     }
 }
 
