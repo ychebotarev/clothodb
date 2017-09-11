@@ -23,7 +23,7 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>ClothDBTest</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
-    <ProjectName>ClothoDB.Test</ProjectName>
+    <ProjectName>TimeSeries.Test</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -167,8 +167,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\ClothoDB\ClothoDB.vcxproj">
-      <Project>{2778B793-150E-4B50-A407-A693B6D60B43}</Project>
+    <ProjectReference Include="..\..\src\TimeSeries\TimeSeries.vcxproj">
+      <Project>{2778b793-150e-4b50-a407-a693b6d60b43}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="TimeSeries">
+      <UniqueIdentifier>{e1f6161b-a396-4313-ab79-715cb150506b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Compressor">
+      <UniqueIdentifier>{c72c9f97-34d6-43ba-82fb-2e6a207c346f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="BitUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Compressor\Decompressor.h">
+      <Filter>Compressor</Filter>
+    </ClInclude>
+    <ClInclude Include="Compressor\Compressor.h">
+      <Filter>Compressor</Filter>
+    </ClInclude>
+    <ClInclude Include="BitStream.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Constants.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ErrorCodes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TimeSeries.h">
+      <Filter>TimeSeries</Filter>
+    </ClInclude>
+    <ClInclude Include="TimeSeriesBucket.h">
+      <Filter>TimeSeries</Filter>
+    </ClInclude>
+    <ClInclude Include="TimeSeriesCatalog.h">
+      <Filter>TimeSeries</Filter>
+    </ClInclude>
+    <ClInclude Include="TimeSeriesConfig.h">
+      <Filter>TimeSeries</Filter>
+    </ClInclude>
+    <ClInclude Include="TimeSeriesPoint.h">
+      <Filter>TimeSeries</Filter>
+    </ClInclude>
+    <ClInclude Include="TimeSeriesType.h">
+      <Filter>TimeSeries</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="BitUtils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Compressor\Compressor.cpp">
+      <Filter>Compressor</Filter>
+    </ClCompile>
+    <ClCompile Include="Compressor\Decompressor.cpp">
+      <Filter>Compressor</Filter>
+    </ClCompile>
+    <ClCompile Include="BitStream.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TimeSeries.cpp">
+      <Filter>TimeSeries</Filter>
+    </ClCompile>
+    <ClCompile Include="TimeSeriesBucket.cpp">
+      <Filter>TimeSeries</Filter>
+    </ClCompile>
+    <ClCompile Include="TimeSeriesCatalog.cpp">
+      <Filter>TimeSeries</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

@@ -2,8 +2,8 @@
 #include "CppUnitTest.h"
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
-#include "src/ClothoDB/bitutils.h"
-#include "src/ClothoDB/bitstream/bitstream.h"
+#include "src/TimeSeries/bitutils.h"
+#include "src/TimeSeries/bitstream.h"
 
 using namespace incolun::clothodb;
 
@@ -15,14 +15,12 @@ namespace ClothDBTest
         TEST_METHOD(BitUtilsTestsDummy)
         {
             BitStream stream(10);
-            stream.WriteBits32(1, 13);
-            stream.WriteBits32(257, 9);
-            stream.SetPosition(13);
-            auto result = stream.ReadBit();
-            stream.SetPosition(13);
-            auto result1 = stream.ReadBits32(9);
-            Assert::AreEqual(1, (int)result);
-            Assert::AreEqual(257, (int)result1);
+            stream.WriteBits32(0b11111111111, 11);
+            stream.Seal();
+
+            auto result = stream.ReadBits32(2);
+
+            Assert::AreEqual(0b11, (int)result);
         }
 
         TEST_METHOD(TestBitStreamCapacity)
@@ -34,7 +32,7 @@ namespace ClothDBTest
                 stream.WriteBits64(i, 64);
             }
 
-            stream.SetPosition(0);
+            stream.Seal();
 
             for (uint64_t i = 0; i < 100; ++i)
             {
@@ -45,37 +43,62 @@ namespace ClothDBTest
             }
         }
         
-        TEST_METHOD(ReadBit)
+        TEST_METHOD(ReadBits)
         {
-            auto buffer = std::vector<uint8_t>(10);
-            
-            BitUtils::WriteBits32(buffer, 0, 0b10101010, 8);
-            BitUtils::WriteBits32(buffer, 8, 1, 1);
-            BitUtils::WriteBits32(buffer, 9, 0, 1);
-            
-            auto result0 = BitUtils::ReadBit(buffer, 0);
-            auto result1 = BitUtils::ReadBit(buffer, 1);
-            auto result2 = BitUtils::ReadBit(buffer, 2);
-            auto result3 = BitUtils::ReadBit(buffer, 3);
-            auto result4 = BitUtils::ReadBit(buffer, 4);
-            auto result5 = BitUtils::ReadBit(buffer, 5);
-            auto result6 = BitUtils::ReadBit(buffer, 6);
-            auto result7 = BitUtils::ReadBit(buffer, 7);
-            auto result8 = BitUtils::ReadBit(buffer, 8);
-            auto result9 = BitUtils::ReadBit(buffer, 9);
+            {
+                auto buffer = std::vector<uint8_t>(10);
 
-            Assert::AreEqual(1, (int)result0);
-            Assert::AreEqual(0, (int)result1);
-            Assert::AreEqual(1, (int)result2);
-            Assert::AreEqual(0, (int)result3);
-            Assert::AreEqual(1, (int)result4);
-            Assert::AreEqual(0, (int)result5);
-            Assert::AreEqual(1, (int)result6);
-            Assert::AreEqual(0, (int)result7);
+                BitUtils::WriteBits32(buffer, 0, 0b10101010, 8);
+                BitUtils::WriteBits32(buffer, 8, 1, 1);
+                BitUtils::WriteBits32(buffer, 9, 0, 1);
 
-            Assert::AreEqual(1, (int)result8);
-            Assert::AreEqual(0, (int)result9);
+                auto result0 = BitUtils::ReadBit(buffer, 0);
+                auto result1 = BitUtils::ReadBit(buffer, 1);
+                auto result2 = BitUtils::ReadBit(buffer, 2);
+                auto result3 = BitUtils::ReadBit(buffer, 3);
+                auto result4 = BitUtils::ReadBit(buffer, 4);
+                auto result5 = BitUtils::ReadBit(buffer, 5);
+                auto result6 = BitUtils::ReadBit(buffer, 6);
+                auto result7 = BitUtils::ReadBit(buffer, 7);
+                auto result8 = BitUtils::ReadBit(buffer, 8);
+                auto result9 = BitUtils::ReadBit(buffer, 9);
+
+                Assert::AreEqual(1, (int)result0);
+                Assert::AreEqual(0, (int)result1);
+                Assert::AreEqual(1, (int)result2);
+                Assert::AreEqual(0, (int)result3);
+                Assert::AreEqual(1, (int)result4);
+                Assert::AreEqual(0, (int)result5);
+                Assert::AreEqual(1, (int)result6);
+                Assert::AreEqual(0, (int)result7);
+
+                Assert::AreEqual(1, (int)result8);
+                Assert::AreEqual(0, (int)result9);
+            }
+
+            {
+                BitStream stream(10);
+                stream.WriteBits32(0b11111111111, 11);
+                stream.Seal();
+                auto result = stream.ReadBits32(2);
+                Assert::AreEqual(0b11, (int)result);
+            }
+
+            {
+                BitStream stream(10);
+                stream.WriteBits32(0xFF00FF00, 32);
+                stream.Seal();
+
+                stream.SetPosition(13);
+                auto result1 = stream.ReadBits32(7);
+                Assert::AreEqual(0b1111, (int)result1);
+                
+                stream.SetPosition(7);
+                auto result2 = stream.ReadBits32(12);
+                Assert::AreEqual(0b100000000111, (int)result2);
+            }
         }
+
 		TEST_METHOD(ReadWriteBit)
 		{
 			BitStream buffer(10);
@@ -85,18 +108,50 @@ namespace ClothDBTest
 			buffer.WriteBit(1);
 
 			buffer.Seal();
-			buffer.SetPosition(0);
 
 			auto result0 = buffer.ReadBits32(13);
 			auto result1 = buffer.ReadBit();
 			auto result2 = buffer.ReadBit();
 			auto result3 = buffer.ReadBit();
+            
+            Assert::AreEqual(0b10101010, (int)result0);
+            Assert::AreEqual(1, (int)result1);
+            Assert::AreEqual(0, (int)result2);
+            Assert::AreEqual(1, (int)result3);
 
-			Assert::AreEqual(0b10101010, (int)result0);
-			Assert::AreEqual(1, (int)result1);
-			Assert::AreEqual(0, (int)result2);
-			Assert::AreEqual(1, (int)result3);
-		}
+            bool exception1 = false;
+            try
+            {
+                auto error1 = buffer.ReadBit();
+            }
+            catch (const std::overflow_error&)
+            {
+                exception1 = true;
+            }
+            Assert::IsTrue(exception1);
+
+            bool exception2 = false;
+            try
+            {
+                auto error2 = buffer.ReadBits32(10);
+            }
+            catch (const std::overflow_error&)
+            {
+                exception2 = true;
+            }
+            Assert::IsTrue(exception2);
+
+            bool exception3 = false;
+            try
+            {
+                auto error3 = buffer.ReadBits64(50);
+            }
+            catch (const std::overflow_error&)
+            {
+                exception3 = true;
+            }
+            Assert::IsTrue(exception3);
+        }
 
 		TEST_METHOD(ReadHiBits)
         {
@@ -188,6 +243,7 @@ namespace ClothDBTest
             Assert::AreEqual((uint8_t)0b11111111, buffer[0]);
             Assert::AreEqual((uint8_t)0b10000000, buffer[1]);
         }
+
         TEST_METHOD(WriteTwoBitWithOwerflow)
         {
             std::vector<uint8_t> buffer(10);
@@ -198,6 +254,7 @@ namespace ClothDBTest
             Assert::AreEqual((uint8_t)0b00000001, buffer[0]);
             Assert::AreEqual((uint8_t)0b10000000, buffer[1]);
         }
+
         TEST_METHOD(WriteFiveBitsMultiple)
 		{
             std::vector<uint8_t> buffer(10);
@@ -250,15 +307,16 @@ namespace ClothDBTest
         {
             BitStream buffer(10);
             buffer.WriteBits32(0b10100101, 8);
+            buffer.Seal();
 
-            uint32_t result1 = buffer.ReadBits32(0, 1);
-            uint32_t result2 = buffer.ReadBits32(1, 1);
-            uint32_t result3 = buffer.ReadBits32(2, 1);
-            uint32_t result4 = buffer.ReadBits32(3, 1);
-            uint64_t result5 = buffer.ReadBits64(4, 1);
-            uint64_t result6 = buffer.ReadBits64(5, 1);
-            uint64_t result7 = buffer.ReadBits64(6, 1);
-            uint64_t result8 = buffer.ReadBits64(7, 1);
+            auto result1 = buffer.ReadBits32(0, 1);
+            auto result2 = buffer.ReadBits32(1, 1);
+            auto result3 = buffer.ReadBits32(2, 1);
+            auto result4 = buffer.ReadBits32(3, 1);
+            auto result5 = buffer.ReadBits64(4, 1);
+            auto result6 = buffer.ReadBits64(5, 1);
+            auto result7 = buffer.ReadBits64(6, 1);
+            auto result8 = buffer.ReadBits64(7, 1);
 
             Assert::AreEqual(1, (int)result1);
             Assert::AreEqual(0, (int)result2);
@@ -277,10 +335,11 @@ namespace ClothDBTest
             buffer.WriteBits32(0b101, 3);
             buffer.WriteBits64(0b0101, 4);
             buffer.WriteBits32(0b00101, 5);
+            buffer.Seal();
 
-            uint64_t result1 = buffer.ReadBits64(3, 4);
-            uint32_t result2 = buffer.ReadBits32(0, 3);
-            uint64_t result3 = buffer.ReadBits64(7, 5);
+            auto result1 = buffer.ReadBits64(3, 4);
+            auto result2 = buffer.ReadBits32(0, 3);
+            auto result3 = buffer.ReadBits64(7, 5);
 
             Assert::AreEqual(0b0101, (int)result1);
             Assert::AreEqual(0b101, (int)result2);
@@ -295,8 +354,9 @@ namespace ClothDBTest
             for(int i=0;i<32;++i)
                 buffer.WriteBits32(0, 1);
             buffer.WriteBits32(0b11111, 5);
+            buffer.Seal();
 
-            uint32_t result = buffer.ReadBits32(3, 32);
+            auto result = buffer.ReadBits32(3, 32);
 
             Assert::AreEqual(0, (int)result);
         }
@@ -309,12 +369,12 @@ namespace ClothDBTest
             for (int i = 0; i<64; ++i)
                 buffer.WriteBits64(0, 1);
             buffer.WriteBits64(0b11111, 5);
+            buffer.Seal();
 
-            Assert::AreEqual(72, (int)buffer.GetPosition());
+            auto result32 = buffer.ReadBits32(3, 32);
+            auto result64 = buffer.ReadBits64(3, 64);
 
-            uint32_t result32 = buffer.ReadBits32(3, 32);
-            uint64_t result64 = buffer.ReadBits64(3, 64);
-
+            Assert::AreEqual(72, (int)buffer.GetLength());
             Assert::AreEqual(0, (int)result32);
             Assert::AreEqual(0, (int)result64);
         }
@@ -328,12 +388,13 @@ namespace ClothDBTest
             buffer.WriteBits32(0b111, 3);
             buffer.WriteBits32(value, 32);
             buffer.WriteBits32(0b11111, 5);
-            Assert::AreEqual(40, (int)buffer.GetPosition());
+            buffer.Seal();
 
-            uint8_t result1 = buffer.ReadBits32(3, 8);
-            uint32_t result = buffer.ReadBits32(3, 32);
+            auto result1 = buffer.ReadBits32(3, 8);
+            auto result2 = buffer.ReadBits32(3, 32);
 
-            Assert::AreEqual(value, result);
+            Assert::AreEqual(40, (int)buffer.GetLength());
+            Assert::AreEqual(value, result2);
         }
         
         TEST_METHOD(Read64BitsDeadbeef)
@@ -345,12 +406,14 @@ namespace ClothDBTest
             buffer.WriteBits32(0b111, 3);
             buffer.WriteBits64(value, 64);
             buffer.WriteBits32(0b11111, 5);
-            Assert::AreEqual(72, (int)buffer.GetPosition());
+            buffer.Seal();
 
-            uint8_t result1 = buffer.ReadBits32(3, 8);
-            uint64_t result = buffer.ReadBits64(3, 64);
 
-            Assert::AreEqual(value, result);
+            auto result32 = buffer.ReadBits32(3, 8);
+            auto result64 = buffer.ReadBits64(3, 64);
+
+            Assert::AreEqual(72, (int)buffer.GetLength());
+            Assert::AreEqual(value, result64);
         }
 
         TEST_METHOD(TestLeadingZeros32)
