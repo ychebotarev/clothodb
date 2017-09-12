@@ -22,9 +22,8 @@ namespace ClothDBTest
 			expectedTimestamps.push_back(0x1EEF);
 
 			auto stream = Compressor::CompressTimestamps(expectedTimestamps);
-			stream->Seal();
-
 			auto actualTimestamps = Decompressor::DecompressTimeStamps(*stream.get());
+            
             Assert::IsFalse(actualTimestamps.IsError());
 			CompareVectors(expectedTimestamps, *actualTimestamps.value.get());
         }
@@ -36,9 +35,8 @@ namespace ClothDBTest
             expectedValues.push_back(*(double*)&expectedValue);
 
             auto stream = Compressor::CompressDoubleValues(expectedValues);
-            stream->Seal();
-
             auto actualValues = Decompressor::DecompressDoubleValues(*stream.get());
+            
             Assert::IsFalse(actualValues.IsError());
             CompareVectors(expectedValues, *actualValues.value.get());
 
@@ -53,9 +51,8 @@ namespace ClothDBTest
             expectedValues.push_back(expectedValue);
 
             auto stream = Compressor::CompressDoubleValues(expectedValues);
-            stream->Seal();
-
             auto actualValues = Decompressor::DecompressDoubleValues(*stream.get());
+            
             Assert::IsFalse(actualValues.IsError());
             CompareVectors(expectedValues, *actualValues.value.get());
         }
@@ -67,9 +64,8 @@ namespace ClothDBTest
             expectedValues.push_back(expectedValue);
 
             auto stream = Compressor::CompressIntegerValues(expectedValues);
-            stream->Seal();
-
             auto actualValues = Decompressor::DecompressIntegerValues(*stream.get());
+            
             Assert::IsFalse(actualValues.IsError());
             CompareVectors(expectedValues, *actualValues.value.get());
 
@@ -84,9 +80,8 @@ namespace ClothDBTest
             expectedValues.push_back(expectedValue);
 
             auto stream = Compressor::CompressIntegerValues(expectedValues);
-            stream->Seal();
-
             auto actualValues = Decompressor::DecompressIntegerValues(*stream.get());
+            
             Assert::IsFalse(actualValues.IsError());
             CompareVectors(expectedValues, *actualValues.value.get());
 
@@ -105,9 +100,8 @@ namespace ClothDBTest
             expectedValues.push_back(28.2 / 10);
 
             auto stream = Compressor::CompressDoubleValues(expectedValues);
-            stream->Seal();
-
             auto actualValues = Decompressor::DecompressDoubleValues(*stream.get());
+            
             Assert::IsFalse(actualValues.IsError());
             CompareVectors(expectedValues, *actualValues.value.get());
         }
@@ -123,9 +117,8 @@ namespace ClothDBTest
             expectedValues.push_back(27);
 
             auto stream = Compressor::CompressTimestamps(expectedValues);
-            stream->Seal();
-
             auto actualValues = Decompressor::DecompressTimeStamps(*stream.get());
+            
             Assert::IsFalse(actualValues.IsError());
             CompareVectors(expectedValues, *actualValues.value.get());
         }
@@ -141,9 +134,8 @@ namespace ClothDBTest
             expectedValues.push_back(27);
 
             auto stream = Compressor::CompressIntegerValues(expectedValues);
-            stream->Seal();
-
             auto actualValues = Decompressor::DecompressIntegerValues(*stream.get());
+            
             Assert::IsFalse(actualValues.IsError());
             CompareVectors(expectedValues, *actualValues.value.get());
         }
@@ -156,9 +148,8 @@ namespace ClothDBTest
             expectedTimestamps.push_back(3);
 
 			auto stream = Compressor::CompressTimestamps(expectedTimestamps);
-			stream->Seal();
-
 			auto actualTimestamps = Decompressor::DecompressTimeStamps(*stream.get());
+            
             Assert::IsFalse(actualTimestamps.IsError());
 			CompareVectors(expectedTimestamps, *actualTimestamps.value.get());
 		}
@@ -174,9 +165,8 @@ namespace ClothDBTest
             expectedTimestamps.push_back((uint64_t)0xFFFFFFFF + 3);
 
             auto stream = Compressor::CompressIntegerValues(expectedTimestamps);
-            stream->Seal();
-
             auto actualTimestamps = Decompressor::DecompressIntegerValues(*stream.get());
+            
             Assert::IsFalse(actualTimestamps.IsError());
             CompareVectors(expectedTimestamps, *actualTimestamps.value.get());
         }
@@ -191,9 +181,8 @@ namespace ClothDBTest
             }
 
             auto stream = Compressor::CompressTimestamps(expectedTimestamps);
-            stream->Seal();
-
             auto actualTimestamps = Decompressor::DecompressTimeStamps(*stream.get());
+            
             Assert::IsFalse(actualTimestamps.IsError());
             CompareVectors(expectedTimestamps, *actualTimestamps.value.get());
         }
@@ -208,9 +197,8 @@ namespace ClothDBTest
             }
 
             auto stream = Compressor::CompressIntegerValues(expectedTimestamps);
-            stream->Seal();
-
             auto actualTimestamps = Decompressor::DecompressIntegerValues(*stream.get());
+            
             Assert::IsFalse(actualTimestamps.IsError());
             CompareVectors(expectedTimestamps, *actualTimestamps.value.get());
         }
@@ -223,9 +211,8 @@ namespace ClothDBTest
             expectedTimestamps.push_back(1);
 
             auto stream = Compressor::CompressTimestamps(expectedTimestamps);
-            stream->Seal();
-
             auto actualTimestamps = Decompressor::DecompressTimeStamps(*stream.get());
+            
             Assert::IsFalse(actualTimestamps.IsError());
             CompareVectors(expectedTimestamps, *actualTimestamps.value.get());
         }
@@ -239,9 +226,8 @@ namespace ClothDBTest
             }
 
             auto stream = Compressor::CompressTimestamps(expectedTimestamps);
-            stream->Seal();
-
             auto actualTimestamps = Decompressor::DecompressTimeStamps(*stream.get());
+            
             Assert::IsFalse(actualTimestamps.IsError());
             CompareVectors(expectedTimestamps, *actualTimestamps.value.get());
         }
@@ -255,9 +241,8 @@ namespace ClothDBTest
             }
 
             auto stream = Compressor::CompressIntegerValues(expectedTimestamps);
-            stream->Seal();
-
             auto actualTimestamps = Decompressor::DecompressIntegerValues(*stream.get());
+            
             Assert::IsFalse(actualTimestamps.IsError());
             CompareVectors(expectedTimestamps, *actualTimestamps.value.get());
         }
@@ -272,9 +257,8 @@ namespace ClothDBTest
             expectedTimestamps.push_back(100);
 
             auto stream = Compressor::CompressTimestamps(expectedTimestamps);
-            stream->Seal();
-
             auto actualTimestamps = Decompressor::DecompressTimeStamps(*stream.get());
+            
             Assert::IsFalse(actualTimestamps.IsError());
             CompareVectors(expectedTimestamps, *actualTimestamps.value.get());
         }
@@ -293,9 +277,8 @@ namespace ClothDBTest
             }
 
             auto stream = Compressor::CompressTimestamps(expectedTimestamps);
-            stream->Seal();
-
             auto actualTimestamps = Decompressor::DecompressTimeStamps(*stream.get());
+            
             Assert::IsFalse(actualTimestamps.IsError());
             CompareVectors(expectedTimestamps, *actualTimestamps.value.get());
         }

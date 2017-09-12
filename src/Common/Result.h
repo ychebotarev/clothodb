@@ -82,7 +82,7 @@ namespace clothodb {
     template<class V, class E>
     struct Result 
     {
-        typedef T inner_Type;
+        typedef V inner_Type;
 
         union
         {

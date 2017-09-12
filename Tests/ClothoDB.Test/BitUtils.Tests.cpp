@@ -1,4 +1,7 @@
 #include "stdafx.h"
+
+#include <functional>
+
 #include "CppUnitTest.h"
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -15,10 +18,11 @@ namespace ClothDBTest
         TEST_METHOD(BitUtilsTestsDummy)
         {
             BitStream stream(10);
-            stream.WriteBits32(0b11111111111, 11);
-            stream.Seal();
+            BitStreamWriter writer(stream);
+            writer.WriteBits32(0b11111111111, 11);
+            writer.Commit();
 
-            auto result = stream.ReadBits32(2);
+            auto result = stream.ReadBits32(0, 2);
 
             Assert::AreEqual(0b11, (int)result);
         }
@@ -26,18 +30,21 @@ namespace ClothDBTest
         TEST_METHOD(TestBitStreamCapacity)
         {
             BitStream stream(10);
+            BitStreamWriter writer(stream);
+
             for (uint64_t i = 0; i < 100; ++i)
             {
-                stream.WriteBits32((uint32_t)i, 32);
-                stream.WriteBits64(i, 64);
+                writer.WriteBits32((uint32_t)i, 32);
+                writer.WriteBits64(i, 64);
             }
 
-            stream.Seal();
+            writer.Commit();
 
+            BitStreamReader reader(stream);
             for (uint64_t i = 0; i < 100; ++i)
             {
-                auto result32 = stream.ReadBits32(32);
-                auto result64 = stream.ReadBits64(64);
+                auto result32 = reader.ReadBits32(32);
+                auto result64 = reader.ReadBits64(64);
                 Assert::AreEqual((uint32_t)i, result32);
                 Assert::AreEqual(i, result64);
             }
@@ -78,79 +85,68 @@ namespace ClothDBTest
 
             {
                 BitStream stream(10);
-                stream.WriteBits32(0b11111111111, 11);
-                stream.Seal();
-                auto result = stream.ReadBits32(2);
+
+                stream.WriteBits32(0, 0b11111111111, 11);
+                stream.SetCommitedBits(11);
+                
+                auto result = stream.ReadBits32(0, 2);
                 Assert::AreEqual(0b11, (int)result);
             }
 
             {
                 BitStream stream(10);
-                stream.WriteBits32(0xFF00FF00, 32);
-                stream.Seal();
+                stream.WriteBits32(0, 0xFF00FF00, 32);
+                stream.SetCommitedBits(32);
 
-                stream.SetPosition(13);
-                auto result1 = stream.ReadBits32(7);
+                auto result1 = stream.ReadBits32(13, 7);
                 Assert::AreEqual(0b1111, (int)result1);
                 
-                stream.SetPosition(7);
-                auto result2 = stream.ReadBits32(12);
+                auto result2 = stream.ReadBits32(7, 12);
                 Assert::AreEqual(0b100000000111, (int)result2);
             }
         }
 
 		TEST_METHOD(ReadWriteBit)
 		{
-			BitStream buffer(10);
-			buffer.WriteBits32(0b10101010, 13);
-			buffer.WriteBit(1);
-			buffer.WriteBit(0);
-			buffer.WriteBit(1);
+			BitStream stream(10);
+            BitStreamWriter writer(stream);
+            BitStreamReader reader(stream);
 
-			buffer.Seal();
+            writer.WriteBits32(0b10101010, 13);
+            writer.WriteBit(1);
+            writer.WriteBit(0);
+            writer.WriteBit(1);
+            writer.Commit();
 
-			auto result0 = buffer.ReadBits32(13);
-			auto result1 = buffer.ReadBit();
-			auto result2 = buffer.ReadBit();
-			auto result3 = buffer.ReadBit();
+			auto result0 = reader.ReadBits32(13);
+			auto result1 = reader.ReadBit();
+			auto result2 = reader.ReadBit();
+			auto result3 = reader.ReadBit();
             
             Assert::AreEqual(0b10101010, (int)result0);
             Assert::AreEqual(1, (int)result1);
             Assert::AreEqual(0, (int)result2);
             Assert::AreEqual(1, (int)result3);
 
-            bool exception1 = false;
-            try
-            {
-                auto error1 = buffer.ReadBit();
-            }
-            catch (const std::overflow_error&)
-            {
-                exception1 = true;
-            }
-            Assert::IsTrue(exception1);
+            auto f1 = [&reader]() { reader.ReadBit(); };
 
-            bool exception2 = false;
-            try
+            auto checkException = [](std::function<void()> func)
             {
-                auto error2 = buffer.ReadBits32(10);
-            }
-            catch (const std::overflow_error&)
-            {
-                exception2 = true;
-            }
-            Assert::IsTrue(exception2);
+                bool exception = false;
+                try
+                {
+                    func();
+                }
+                catch (const std::overflow_error&)
+                {
+                    exception = true;
+                }
+                Assert::IsTrue(exception);
+            };
 
-            bool exception3 = false;
-            try
-            {
-                auto error3 = buffer.ReadBits64(50);
-            }
-            catch (const std::overflow_error&)
-            {
-                exception3 = true;
-            }
-            Assert::IsTrue(exception3);
+            checkException([&reader]() { reader.ReadBit(); });
+            checkException([&reader]() { reader.ReadBits32(10); });
+            checkException([&reader]() { reader.ReadBits64(50); });
         }
 
 		TEST_METHOD(ReadHiBits)
@@ -286,37 +282,39 @@ namespace ClothDBTest
 
         TEST_METHOD(WriteDeadBeef)
         {
-            BitStream buffer(10);
+            BitStream stream(10);
+            BitStreamWriter writer(stream);
 
-            buffer.WriteBits32(0xD, 4);
-            buffer.WriteBits32(0xE, 4);
-            buffer.WriteBits32(0xA, 4);
-            buffer.WriteBits32(0xD, 4);
-            buffer.WriteBits32(0xB, 4);
-            buffer.WriteBits32(0xE, 4);
-            buffer.WriteBits32(0xE, 4);
-            buffer.WriteBits32(0xF, 4);
+            writer.WriteBits32(0xD, 4);
+            writer.WriteBits32(0xE, 4);
+            writer.WriteBits32(0xA, 4);
+            writer.WriteBits32(0xD, 4);
+            writer.WriteBits32(0xB, 4);
+            writer.WriteBits32(0xE, 4);
+            writer.WriteBits32(0xE, 4);
+            writer.WriteBits32(0xF, 4);
             
-            Assert::AreEqual((uint8_t)0xDE, buffer[0]);
-            Assert::AreEqual((uint8_t)0xAD, buffer[1]);
-            Assert::AreEqual((uint8_t)0xBE, buffer[2]);
-            Assert::AreEqual((uint8_t)0xEF, buffer[3]);
+            Assert::AreEqual((uint8_t)0xDE, stream[0]);
+            Assert::AreEqual((uint8_t)0xAD, stream[1]);
+            Assert::AreEqual((uint8_t)0xBE, stream[2]);
+            Assert::AreEqual((uint8_t)0xEF, stream[3]);
         }
         
         TEST_METHOD(ReadOneBit)
         {
-            BitStream buffer(10);
-            buffer.WriteBits32(0b10100101, 8);
-            buffer.Seal();
+            BitStream stream(10);
+            BitStreamWriter writer(stream);
+            writer.WriteBits32(0b10100101, 8);
+            writer.Commit();
 
-            auto result1 = buffer.ReadBits32(0, 1);
-            auto result2 = buffer.ReadBits32(1, 1);
-            auto result3 = buffer.ReadBits32(2, 1);
-            auto result4 = buffer.ReadBits32(3, 1);
-            auto result5 = buffer.ReadBits64(4, 1);
-            auto result6 = buffer.ReadBits64(5, 1);
-            auto result7 = buffer.ReadBits64(6, 1);
-            auto result8 = buffer.ReadBits64(7, 1);
+            auto result1 = stream.ReadBits32(0, 1);
+            auto result2 = stream.ReadBits32(1, 1);
+            auto result3 = stream.ReadBits32(2, 1);
+            auto result4 = stream.ReadBits32(3, 1);
+            auto result5 = stream.ReadBits64(4, 1);
+            auto result6 = stream.ReadBits64(5, 1);
+            auto result7 = stream.ReadBits64(6, 1);
+            auto result8 = stream.ReadBits64(7, 1);
 
             Assert::AreEqual(1, (int)result1);
             Assert::AreEqual(0, (int)result2);
@@ -330,16 +328,17 @@ namespace ClothDBTest
 
         TEST_METHOD(ReadMultipleBits)
         {
-            BitStream buffer(10);
+            BitStream stream(10);
+            BitStreamWriter writer(stream);
 
-            buffer.WriteBits32(0b101, 3);
-            buffer.WriteBits64(0b0101, 4);
-            buffer.WriteBits32(0b00101, 5);
-            buffer.Seal();
+            writer.WriteBits32(0b101, 3);
+            writer.WriteBits64(0b0101, 4);
+            writer.WriteBits32(0b00101, 5);
+            writer.Commit();
 
-            auto result1 = buffer.ReadBits64(3, 4);
-            auto result2 = buffer.ReadBits32(0, 3);
-            auto result3 = buffer.ReadBits64(7, 5);
+            auto result1 = stream.ReadBits64(3, 4);
+            auto result2 = stream.ReadBits32(0, 3);
+            auto result3 = stream.ReadBits64(7, 5);
 
             Assert::AreEqual(0b0101, (int)result1);
             Assert::AreEqual(0b101, (int)result2);
@@ -348,71 +347,74 @@ namespace ClothDBTest
         
         TEST_METHOD(Read32BitsZero)
         {
-            BitStream buffer(20);
+            BitStream stream(20);
+            BitStreamWriter writer(stream);
 
-            buffer.WriteBits32(0b111, 3);
+            writer.WriteBits32(0b111, 3);
             for(int i=0;i<32;++i)
-                buffer.WriteBits32(0, 1);
-            buffer.WriteBits32(0b11111, 5);
-            buffer.Seal();
+                writer.WriteBits32(0, 1);
+            writer.WriteBits32(0b11111, 5);
+            writer.Commit();
 
-            auto result = buffer.ReadBits32(3, 32);
+            auto result = stream.ReadBits32(3, 32);
 
             Assert::AreEqual(0, (int)result);
         }
         
         TEST_METHOD(Read64BitsZero)
         {
-            BitStream buffer(20);
+            BitStream stream(20);
+            BitStreamWriter writer(stream);
 
-            buffer.WriteBits64(0b111, 3);
+            writer.WriteBits64(0b111, 3);
             for (int i = 0; i<64; ++i)
-                buffer.WriteBits64(0, 1);
-            buffer.WriteBits64(0b11111, 5);
-            buffer.Seal();
+                writer.WriteBits64(0, 1);
+            writer.WriteBits64(0b11111, 5);
+            writer.Commit();
 
-            auto result32 = buffer.ReadBits32(3, 32);
-            auto result64 = buffer.ReadBits64(3, 64);
+            auto result32 = stream.ReadBits32(3, 32);
+            auto result64 = stream.ReadBits64(3, 64);
 
-            Assert::AreEqual(72, (int)buffer.GetLength());
+            Assert::AreEqual(72, (int)stream.GetCommitedBits());
             Assert::AreEqual(0, (int)result32);
             Assert::AreEqual(0, (int)result64);
         }
 
         TEST_METHOD(Read32BitsDeadbeaf)
         {
-            BitStream buffer(20);
+            BitStream stream(20);
+            BitStreamWriter writer(stream);
 
             uint32_t value = 0xDEADBEEF;
             
-            buffer.WriteBits32(0b111, 3);
-            buffer.WriteBits32(value, 32);
-            buffer.WriteBits32(0b11111, 5);
-            buffer.Seal();
+            writer.WriteBits32(0b111, 3);
+            writer.WriteBits32(value, 32);
+            writer.WriteBits32(0b11111, 5);
+            writer.Commit();
 
-            auto result1 = buffer.ReadBits32(3, 8);
-            auto result2 = buffer.ReadBits32(3, 32);
+            auto result1 = stream.ReadBits32(3, 8);
+            auto result2 = stream.ReadBits32(3, 32);
 
-            Assert::AreEqual(40, (int)buffer.GetLength());
+            Assert::AreEqual(40, (int)stream.GetCommitedBits());
             Assert::AreEqual(value, result2);
         }
         
         TEST_METHOD(Read64BitsDeadbeef)
         {
-            BitStream buffer(20);
+            BitStream stream(20);
+            BitStreamWriter writer(stream);
 
             uint64_t value = 0xDEADBEEFBAAAAAAD;
 
-            buffer.WriteBits32(0b111, 3);
-            buffer.WriteBits64(value, 64);
-            buffer.WriteBits32(0b11111, 5);
-            buffer.Seal();
+            writer.WriteBits32(0b111, 3);
+            writer.WriteBits64(value, 64);
+            writer.WriteBits32(0b11111, 5);
+            writer.Commit();
 
+            auto result32 = stream.ReadBits32(3, 8);
+            auto result64 = stream.ReadBits64(3, 64);
 
-            auto result32 = buffer.ReadBits32(3, 8);
-            auto result64 = buffer.ReadBits64(3, 64);
-
-            Assert::AreEqual(72, (int)buffer.GetLength());
+            Assert::AreEqual(72, (int)stream.GetCommitedBits());
             Assert::AreEqual(value, result64);
         }
 

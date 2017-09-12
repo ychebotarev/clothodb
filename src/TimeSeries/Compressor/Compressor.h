@@ -1,12 +1,11 @@
 #pragma once
 
 #include "src/timeseries/common.h"
+#include "src/timeseries/bitstream.h"
 
 namespace incolun{
 namespace clothodb{
 
-class BitStream;
-    
 class Compressor
 {
 public:
@@ -30,7 +29,7 @@ public:
 class TimestampCompressor
 {
 public:
-    TimestampCompressor(BitStream& stream);
+    TimestampCompressor(BitStreamWriter& writer);
 
     void AppendFirstValue(uint32_t timestamp);
     void AppendNextValue(uint32_t timestamp);
@@ -39,7 +38,7 @@ private:
     __inline void StoreDeltaOfDelta(int32_t deltaOfDelta);
 
 private:
-    BitStream& m_stream;
+    BitStreamWriter& m_writer;
     uint32_t m_prevTimestamp;
     int32_t m_prevTimestampDelta;
 };
@@ -47,13 +46,13 @@ private:
 class DoubleCompressor : public ValueCompressor
 {
 public:
-    DoubleCompressor(BitStream& stream);
+    DoubleCompressor(BitStreamWriter& writer);
 
     void AppendFirstValue(uint64_t* input);
     void AppendNextValue(uint64_t* input);
 
 private:
-    BitStream& m_stream;
+    BitStreamWriter& m_writer;
     uint64_t m_prevValue;
     uint32_t m_prevValueTZ;
     uint32_t m_prevValueLZ;
@@ -62,7 +61,7 @@ private:
 class IntegerCompressor : public ValueCompressor
 {
 public:
-    IntegerCompressor(BitStream& stream);
+    IntegerCompressor(BitStreamWriter& writer);
     
     void AppendFirstValue(uint64_t* input);
     void AppendNextValue(uint64_t* input);
@@ -71,7 +70,7 @@ private:
     __inline void StoreDeltaOfDelta(int64_t deltaOfDelta);
 
 private:
-    BitStream& m_stream;
+    BitStreamWriter& m_writer;
     uint64_t m_prevValue;
     int64_t m_prevValueDelta;
 };

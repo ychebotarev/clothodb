@@ -6,19 +6,19 @@ namespace clothodb{
 
 TimeSeriesBucket::TimeSeriesBucket(const TimeSeriesConfig& config):
     m_config(config),
-    m_Sealed(false)
+    m_Sealed(false),
+    m_streamWriter(m_stream)
 {
-    m_stream = std::make_shared<BitStream>();
-    m_timeStampCompressor = std::make_unique<TimestampCompressor>(*m_stream.get());
+    m_timeStampCompressor = std::make_unique<TimestampCompressor>(m_streamWriter);
     switch (m_config.m_type)
     {
     case TimeSeriesType::TypeDouble:
     {
-        m_valueCompressor = std::make_unique<DoubleCompressor>(*m_stream.get());
+        m_valueCompressor = std::make_unique<DoubleCompressor>(m_streamWriter);
     }
     case TimeSeriesType::TypeInteger:
     {
-        m_valueCompressor = std::make_unique<IntegerCompressor>(*m_stream.get());
+        m_valueCompressor = std::make_unique<IntegerCompressor>(m_streamWriter);
     }
     default:
         break;
@@ -31,8 +31,8 @@ TimeSeriesBucket::~TimeSeriesBucket()
 
 void TimeSeriesBucket::Reset()
 {
-    m_stream->SetLength(0);
-    m_stream->SetPosition(0);
+    m_stream.SetCommitedBits(0);
+    m_streamWriter.SetPosition(0);
     m_Sealed = false;
 }
 
@@ -45,7 +45,7 @@ void TimeSeriesBucket::AddValue(uint64_t value, uint32_t timestamp)
     }
     timestamp /= 1000;
 
-    bool firstValue = m_stream->IsEmpty();
+    bool firstValue = m_stream.IsEmpty();
 
     if (firstValue)
     {
@@ -60,52 +60,54 @@ void TimeSeriesBucket::AddValue(uint64_t value, uint32_t timestamp)
 
     if (m_config.m_storeMilliseconds)
     {
-        m_stream->WriteBits32(milliseconds, 10);
+        m_streamWriter.WriteBits32(milliseconds, 10);
     }
+
+    m_streamWriter.Commit();
 }
 
 void TimeSeriesBucket::Decompress(
-    uint32_t toDecompress,
     std::vector<TimeSeriesPoint>& points, 
     uint64_t baseTime,
     uint64_t startTime, 
     uint64_t endTime)
 {
     std::unique_ptr<ValueDecompressor> decompressor;
+    BitStreamReader reader(m_stream);
+
     if(m_config.m_type == TimeSeriesType::TypeDouble)
     {
-        decompressor = std::unique_ptr<DoubleDecompressor>(new DoubleDecompressor(*m_stream.get()));
+        decompressor = std::unique_ptr<DoubleDecompressor>(new DoubleDecompressor(reader));
     }
     if (m_config.m_type == TimeSeriesType::TypeInteger)
     {
-        decompressor = std::unique_ptr<IntegerDecompressor>(new IntegerDecompressor(*m_stream.get()));
+        decompressor = std::unique_ptr<IntegerDecompressor>(new IntegerDecompressor(reader));
     }
     
-    m_stream->SetPosition(0);
-    
-    TimeStampDecompressor timeStampDecompressor(*m_stream.get());
+    TimeStampDecompressor timeStampDecompressor(reader);
     uint64_t timestamp = timeStampDecompressor.GetFirstValue();
     timestamp += baseTime;
     timestamp *= 1000;
 
     if (m_config.m_storeMilliseconds)
     {
-        uint32_t milliseconds = m_stream->ReadBits32(10);
+        uint32_t milliseconds = reader.ReadBits32(10);
         timestamp += milliseconds;
     }
     
+    uint32_t toDecompress = m_stream.GetCommitedBits();
     uint64_t value = decompressor->GetFirstValue();
     if (timestamp >= startTime && timestamp <= endTime)
         points.push_back({ timestamp, value });
 
-    while (m_stream->CanRead() && m_stream->GetPosition() < toDecompress)
+    while (reader.CanRead() && reader.GetPosition() < toDecompress)
     {
         timestamp = timeStampDecompressor.GetNextValue();
         timestamp += baseTime;
         timestamp *= 1000;
         if (m_config.m_storeMilliseconds)
         {
-            uint32_t milliseconds = m_stream->ReadBits32(10);
+            uint32_t milliseconds = reader.ReadBits32(10);
             timestamp += milliseconds;
         }
         value = decompressor->GetNextValue();
@@ -116,7 +118,6 @@ void TimeSeriesBucket::Decompress(
 
 void TimeSeriesBucket::Seal()
 {
-    m_stream->Seal();
     m_Sealed = true;
 }
 

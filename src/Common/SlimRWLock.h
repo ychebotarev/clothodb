@@ -42,5 +42,28 @@ private:
     RTL_SRWLOCK& m_srwLock;
 };
 
+class ConditionalSRWLockExclusive
+{
+public:
+
+    ConditionalSRWLockExclusive(bool needLock, RTL_SRWLOCK& srwLock) :
+        m_srwLock(srwLock),
+        m_needLock(needLock)
+    {
+        if(m_needLock)
+            ::AcquireSRWLockExclusive(&m_srwLock);
+    }
+
+    ~ConditionalSRWLockExclusive()
+    {
+        if(m_needLock)
+            ::ReleaseSRWLockExclusive(&m_srwLock);
+    }
+
+private:
+    RTL_SRWLOCK& m_srwLock;
+    bool m_needLock;
+};
+
 }}
 

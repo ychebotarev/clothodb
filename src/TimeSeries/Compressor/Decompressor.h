@@ -1,11 +1,10 @@
 #pragma once
 
 #include "src/timeseries/common.h"
+#include "src/timeseries/bitstream.h"
 
 namespace incolun{
 namespace clothodb{
-
-class BitStream;
 
 class Decompressor
 {
@@ -30,7 +29,7 @@ public:
 class TimeStampDecompressor
 {
 public:
-    TimeStampDecompressor(BitStream& stream);
+    TimeStampDecompressor(BitStreamReader& reader);
 
     uint32_t GetFirstValue();
     uint32_t GetNextValue();
@@ -38,7 +37,7 @@ public:
 private:
     __inline int32_t ReadTimestampDeltaOfDelta();
 
-    BitStream& m_stream;
+    BitStreamReader& m_reader;
     int32_t m_prevTimestampDelta;
     uint32_t m_prevTimestamp;
 };
@@ -46,14 +45,14 @@ private:
 class DoubleDecompressor : public ValueDecompressor
 {
 public:
-    DoubleDecompressor(BitStream& stream);
+    DoubleDecompressor(BitStreamReader& reader);
     
     virtual uint64_t GetFirstValue();
     virtual uint64_t GetNextValue();
 
 private:
 
-    BitStream& m_stream;
+    BitStreamReader& m_reader;
     uint64_t m_prevValue = 0;
     uint32_t m_prevValueTZ = 0;
     uint32_t m_prevValueLZ = 0;
@@ -62,7 +61,7 @@ private:
 class IntegerDecompressor : public ValueDecompressor
 {
 public:
-    IntegerDecompressor(BitStream& stream);
+    IntegerDecompressor(BitStreamReader& reader);
     
     virtual uint64_t GetFirstValue();
     virtual uint64_t GetNextValue();
@@ -70,7 +69,7 @@ public:
 private:
     __inline int64_t ReadIntegerDeltaOfDelta();
 
-    BitStream& m_stream;
+    BitStreamReader& m_reader;
     int64_t m_prevIntegerDelta;
     uint64_t m_prevInteger;
 };

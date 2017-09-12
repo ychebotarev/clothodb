@@ -8,8 +8,8 @@
 namespace incolun {
 namespace clothodb {
 
-TimeStampDecompressor::TimeStampDecompressor(BitStream& stream)
-    :m_stream(stream)
+TimeStampDecompressor::TimeStampDecompressor(BitStreamReader& reader)
+    :m_reader(reader)
 {
     m_prevTimestampDelta = 0;
     m_prevTimestamp = 0;
@@ -17,7 +17,7 @@ TimeStampDecompressor::TimeStampDecompressor(BitStream& stream)
 
 uint32_t TimeStampDecompressor::GetFirstValue()
 {
-    m_prevTimestamp = m_stream.ReadBits32(Constants::kFirstTimestampBits);
+    m_prevTimestamp = m_reader.ReadBits32(Constants::kFirstTimestampBits);
     m_prevTimestampDelta = 0;
     return m_prevTimestamp;
 }
@@ -33,29 +33,29 @@ uint32_t TimeStampDecompressor::GetNextValue()
 
 __inline int32_t TimeStampDecompressor::ReadTimestampDeltaOfDelta()
 {
-    if (m_stream.ReadBit() == 0)
+    if (m_reader.ReadBit() == 0)
     {
         return 0;
     }
     
     uint32_t deltaOfDelta = 0;
-    if (m_stream.ReadBit() == 0)
+    if (m_reader.ReadBit() == 0)
     {
-        deltaOfDelta = m_stream.ReadBits32(7);
+        deltaOfDelta = m_reader.ReadBits32(7);
     }
-    else if (m_stream.ReadBit() == 0)
+    else if (m_reader.ReadBit() == 0)
     {
-        deltaOfDelta = m_stream.ReadBits32(9);
+        deltaOfDelta = m_reader.ReadBits32(9);
     }
     else
     {
-        deltaOfDelta = m_stream.ReadBits32(13);
+        deltaOfDelta = m_reader.ReadBits32(13);
     }
     return BitUtils::DecodeZigZag32(++deltaOfDelta);
 }
 
-DoubleDecompressor::DoubleDecompressor(BitStream& stream)
-    :m_stream(stream)
+DoubleDecompressor::DoubleDecompressor(BitStreamReader& reader)
+    :m_reader(reader)
 {
     m_prevValue = 0;
     m_prevValueTZ = 0;
@@ -70,23 +70,23 @@ uint64_t DoubleDecompressor::GetFirstValue()
 uint64_t DoubleDecompressor::GetNextValue()
 {
     uint64_t xorValue = 0;
-    if (m_stream.ReadBit() == 0)
+    if (m_reader.ReadBit() == 0)
     {
         m_prevValue = m_prevValue ^ xorValue;
     }
-    else if (m_stream.ReadBit() == 0)
+    else if (m_reader.ReadBit() == 0)
     {
-        m_prevValueLZ = m_stream.ReadBits32(Constants::kDoubleLeadingZerosLengthBits);
-        uint32_t blockSize = m_stream.ReadBits32(Constants::kDoubleBlockSizeLengthBits) + 1;
+        m_prevValueLZ = m_reader.ReadBits32(Constants::kDoubleLeadingZerosLengthBits);
+        uint32_t blockSize = m_reader.ReadBits32(Constants::kDoubleBlockSizeLengthBits) + 1;
         m_prevValueTZ = 64 - blockSize - m_prevValueLZ;
 
-        xorValue = m_stream.ReadBits64(blockSize);
+        xorValue = m_reader.ReadBits64(blockSize);
         xorValue <<= m_prevValueTZ;
     }
     else
     {
         //use information from previous block
-        xorValue = m_stream.ReadBits64(64 - m_prevValueTZ - m_prevValueLZ);
+        xorValue = m_reader.ReadBits64(64 - m_prevValueTZ - m_prevValueLZ);
         xorValue <<= m_prevValueTZ;
     }
 
@@ -95,8 +95,8 @@ uint64_t DoubleDecompressor::GetNextValue()
     return value;
 }
 
-IntegerDecompressor::IntegerDecompressor(BitStream& stream)
-    :m_stream(stream)
+IntegerDecompressor::IntegerDecompressor(BitStreamReader& reader)
+    :m_reader(reader)
 {
     m_prevIntegerDelta = 0;
     m_prevInteger = 0;
@@ -104,7 +104,7 @@ IntegerDecompressor::IntegerDecompressor(BitStream& stream)
 
 uint64_t IntegerDecompressor::GetFirstValue()
 {
-    m_prevInteger = m_stream.ReadBits64(64);
+    m_prevInteger = m_reader.ReadBits64(64);
     m_prevIntegerDelta = 0;
     return m_prevInteger;
 }
@@ -120,27 +120,27 @@ uint64_t IntegerDecompressor::GetNextValue()
 
 __inline int64_t IntegerDecompressor::ReadIntegerDeltaOfDelta()
 {
-    if (m_stream.ReadBit() == 0)
+    if (m_reader.ReadBit() == 0)
     {
         return 0;
     }
 
     uint64_t deltaOfDelta = 0;
-    if (m_stream.ReadBit() == 0)
+    if (m_reader.ReadBit() == 0)
     {
-        deltaOfDelta = m_stream.ReadBits32(7);
+        deltaOfDelta = m_reader.ReadBits32(7);
     }
-    else if (m_stream.ReadBit() == 0) 
+    else if (m_reader.ReadBit() == 0)
     {
-        deltaOfDelta = m_stream.ReadBits32(9);
+        deltaOfDelta = m_reader.ReadBits32(9);
     }
-    else if (m_stream.ReadBit() == 0)
+    else if (m_reader.ReadBit() == 0)
     {
-        deltaOfDelta = m_stream.ReadBits32(16);
+        deltaOfDelta = m_reader.ReadBits32(16);
     }
     else
     {
-        deltaOfDelta = m_stream.ReadBits64(64);
+        deltaOfDelta = m_reader.ReadBits64(64);
     }
     return BitUtils::DecodeZigZag64(++deltaOfDelta);
 }
@@ -163,18 +163,21 @@ VectorOrError<double> Decompressor::DecompressDoubleValues(BitStream& stream)
 template<typename T, class D>
 VectorOrError<T> Decompressor::Decompress(BitStream& stream)
 {
-    stream.SetPosition(0);
+    BitStreamReader reader(stream);
     
-    std::shared_ptr<std::vector<T>> result;
+    std::shared_ptr<std::vector<T>> result = std::make_shared<std::vector<T>>();
     if (stream.IsEmpty()) return VectorOrError<T>::fromValue(result);
 
     try
     {
-        D decompressor(stream);
-        auto firstValue = decompressor.GetFirstValue();
-        result->push_back(*((T*)&firstValue));
+        D decompressor(reader);
+        if (reader.CanRead())
+        {
+            auto firstValue = decompressor.GetFirstValue();
+            result->push_back(*((T*)&firstValue));
+        }
 
-        while (stream.CanRead())
+        while (reader.CanRead())
         {
             auto nextValue = decompressor.GetNextValue();
             result->push_back(*((T*)&nextValue));

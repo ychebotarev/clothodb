@@ -21,7 +21,6 @@ public:
     void AddValue(uint64_t value, uint32_t timestamp);
 
     void Decompress(
-        uint32_t toDecompress,
         std::vector<TimeSeriesPoint>& points, 
         uint64_t baseTime,
         uint64_t startTime,
@@ -30,9 +29,12 @@ public:
     void Seal();
     bool IsSealed() const { return m_Sealed; };
 
-    std::shared_ptr<BitStream> GetStream() const { return m_stream; }
+    BitStreamReader& GetStreamReader() const { return BitStreamReader(m_stream); }
+    uint32_t GetCommitedBits() const { return m_stream.GetCommitedBits(); }
 private:
-    std::shared_ptr<BitStream> m_stream;
+    BitStream m_stream;
+    BitStreamWriter m_streamWriter;
+
     const TimeSeriesConfig& m_config;
 
     std::unique_ptr<TimestampCompressor> m_timeStampCompressor;
