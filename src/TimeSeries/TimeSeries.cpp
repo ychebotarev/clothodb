@@ -12,8 +12,8 @@ TimeSeries::TimeSeries(std::shared_ptr<TimeSeriesConfig> config)
     :m_config(config),
     m_startHour(0),
     m_lastTimestamp(0),
-    m_startBucket(0),
-    m_endBucket(0)
+    m_firstBucketIndex(0),
+    m_firstEmptyIndex(0)
 {
     InitializeSRWLock(&m_srwLock);
 }
@@ -24,9 +24,8 @@ TimeSeries::~TimeSeries()
 
 bool TimeSeries::IsEmpty() const
 {
-    return m_startBucket == m_endBucket;
+    return m_firstBucketIndex == m_firstEmptyIndex;
 }
-
 
 bool TimeSeries::AddValue(uint64_t value, uint64_t timestamp)
 {
@@ -46,45 +45,41 @@ bool TimeSeries::AddValue(uint64_t value, uint64_t timestamp)
     }
 
     auto storedHours = GetStoredHours();
-    uint64_t nextBucketStart = m_startHour + storedHours;
+
+    uint64_t bucketStart = (m_startHour + storedHours - 1) * Constants::kOneHourInMs;
+    uint64_t nextBucketStart = bucketStart + Constants::kOneHourInMs;
     if (timestamp > nextBucketStart)
     {
         CreateBucket();
-        storedHours += Constants::kOneHourInSeconds;
+        bucketStart += Constants::kOneHourInMs;
     }
 
-    timestamp -= m_startHour;
-    timestamp -= storedHours;
-    m_buckets[m_endBucket]->AddValue(value, (uint32_t)timestamp);
+    timestamp -= bucketStart;
+    m_buckets[LastBucketIndex()]->AddValue(value, (uint32_t)timestamp);
     return true;
 }
 
 TimeSeriesPoints TimeSeries::GetPoints(uint64_t startTime, uint64_t endTime)
 {
     TimeSeriesPoints::inner_Type result = std::make_shared<std::vector<TimeSeriesPoint>>();
-    if (m_startBucket == -1) return TimeSeriesPoints::fromValue(result);
+    if (IsEmpty()) return TimeSeriesPoints::fromValue(result);
     try
     {
-        int bucket = m_startBucket;
+        int bucket = m_firstBucketIndex;
         uint64_t startHour = m_startHour;
         uint64_t endHour = startHour + Constants::kOneHourInMs;
         
         do {
             if (endHour < startTime || startHour >=endTime) break;
 
-            ConditionalSRWLockExclusive lock(
+            SRWLockConditional lock(
                 m_buckets[bucket]->IsSealed(),
                 m_srwLock);
-            m_buckets[bucket]->Decompress(
-                *result.get(),
-                startHour,
-                startTime,
-                endTime);
+            m_buckets[bucket]->Decompress(*result.get(), startHour / 1000, startTime, endTime);
             startHour += Constants::kOneHourInMs;
             endHour += Constants::kOneHourInMs;
-            ++bucket;
-            if (bucket >= kMaxBuckets) bucket -= kMaxBuckets;
-        } while (bucket != m_endBucket);
+            bucket = NextBucket(bucket);
+        } while (bucket != m_firstEmptyIndex);
     
         return TimeSeriesPoints::fromValue(result);
     }
@@ -107,10 +102,10 @@ void TimeSeries::RemoveOldData(uint64_t startTime)
     SRWLockExclusive lock(m_srwLock);
     while (m_startHour < startHour)
     {
-        if (m_startBucket == m_endBucket) break;
-        m_buckets[m_startBucket]->Reset();
+        if (m_firstBucketIndex == m_firstEmptyIndex) break;
+        m_buckets[m_firstBucketIndex]->Reset();
 
-        m_startBucket = NextBucket(m_startBucket);
+        m_firstBucketIndex = NextBucket(m_firstBucketIndex);
         m_startHour += Constants::kOneHourInMs;
     }
 }
@@ -122,27 +117,33 @@ int TimeSeries::NextBucket(int bucket)
     return bucket;
 }
 
+int TimeSeries::LastBucketIndex()
+{
+    return m_firstEmptyIndex > 0 ? (m_firstEmptyIndex - 1) : (kMaxBuckets - 1);
+}
+
+
 void TimeSeries::CreateBucket()
 {
     if (m_buckets.size() < kMaxBuckets)
     {
         m_buckets.emplace_back(new TimeSeriesBucket(*m_config.get()));
-        m_endBucket = (int)m_buckets.size();
+        m_firstEmptyIndex = NextBucket(m_firstEmptyIndex);
         return;
     }
-    m_endBucket = NextBucket(m_endBucket);
-    m_buckets[m_endBucket]->Reset();
-
     //if we catch head - move head forward
-    if (m_endBucket == m_startBucket) 
-        m_startBucket = NextBucket(m_startBucket);
+    if (m_firstEmptyIndex == m_firstBucketIndex)
+        m_firstBucketIndex = NextBucket(m_firstBucketIndex);
+
+    m_buckets[m_firstEmptyIndex]->Reset();
+    m_firstEmptyIndex = NextBucket(m_firstEmptyIndex);
 }
 
 uint32_t TimeSeries::GetStoredHours()
 {
-    return (m_endBucket >= m_startBucket) ?
-        (m_endBucket - m_startBucket) :
-        (kMaxBuckets - m_startBucket + m_endBucket);
+    return (m_firstEmptyIndex >= m_firstBucketIndex) ?
+        (m_firstEmptyIndex - m_firstBucketIndex) :
+        (kMaxBuckets - m_firstBucketIndex + m_firstEmptyIndex);
 }
 
 uint64_t TimeSeries::FloorToHour(uint64_t timestamp)

@@ -15,6 +15,7 @@ TimeSeriesBucket::TimeSeriesBucket(const TimeSeriesConfig& config):
     case TimeSeriesType::TypeDouble:
     {
         m_valueCompressor = std::make_unique<DoubleCompressor>(m_streamWriter);
+        break;
     }
     case TimeSeriesType::TypeInteger:
     {
@@ -68,10 +69,15 @@ void TimeSeriesBucket::AddValue(uint64_t value, uint32_t timestamp)
 
 void TimeSeriesBucket::Decompress(
     std::vector<TimeSeriesPoint>& points, 
-    uint64_t baseTime,
+    uint64_t baseTimeInSec,
     uint64_t startTime, 
     uint64_t endTime)
 {
+    if (m_stream.IsEmpty())
+    {
+        return;
+    }
+
     std::unique_ptr<ValueDecompressor> decompressor;
     BitStreamReader reader(m_stream);
 
@@ -86,33 +92,35 @@ void TimeSeriesBucket::Decompress(
     
     TimeStampDecompressor timeStampDecompressor(reader);
     uint64_t timestamp = timeStampDecompressor.GetFirstValue();
-    timestamp += baseTime;
+    timestamp += baseTimeInSec;
     timestamp *= 1000;
 
+    uint64_t value = decompressor->GetFirstValue();
     if (m_config.m_storeMilliseconds)
     {
         uint32_t milliseconds = reader.ReadBits32(10);
         timestamp += milliseconds;
     }
-    
-    uint32_t toDecompress = m_stream.GetCommitedBits();
-    uint64_t value = decompressor->GetFirstValue();
-    if (timestamp >= startTime && timestamp <= endTime)
-        points.push_back({ timestamp, value });
 
+    if (timestamp >= startTime && timestamp <= endTime)
+        points.push_back({ value, timestamp });
+
+    uint32_t toDecompress = m_stream.GetCommitedBits();
     while (reader.CanRead() && reader.GetPosition() < toDecompress)
     {
         timestamp = timeStampDecompressor.GetNextValue();
-        timestamp += baseTime;
+        timestamp += baseTimeInSec;
         timestamp *= 1000;
+
+        value = decompressor->GetNextValue();
+
         if (m_config.m_storeMilliseconds)
         {
             uint32_t milliseconds = reader.ReadBits32(10);
             timestamp += milliseconds;
         }
-        value = decompressor->GetNextValue();
         if (timestamp >= startTime && timestamp <= endTime)
-            points.push_back({ timestamp, value });
+            points.push_back({ value, timestamp });
     }
 }
 

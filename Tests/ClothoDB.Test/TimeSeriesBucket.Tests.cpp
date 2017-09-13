@@ -22,13 +22,39 @@ namespace ClothDBTest
         {
             auto config = GetSimpleConfig();
             TimeSeriesBucket bucket(config);
-            bucket.AddValue(1, 1000);
-            bucket.AddValue(2, 2000);
-
             TimeSeriesPoints actualPoints;
-            TimeSeriesPoints expectedPoints{ {1000,1}, {2000,2} };
+            TimeSeriesPoints expectedPoints{ {1, 1000}, {2, 2000} };
+            for (auto &point : expectedPoints)
+            {
+                bucket.AddValue(point.value, point.timestamp);
+            }
             bucket.Decompress(actualPoints, 0,0, std::numeric_limits<uint32_t>::max());
             
+            CompareVectors(expectedPoints, actualPoints);
+        }
+
+        TEST_METHOD(TimeSeriesBucketTestsEmpty)
+        {
+            auto config = GetSimpleConfig();
+            TimeSeriesBucket bucket(config);
+            TimeSeriesPoints actualPoints;
+            bucket.Decompress(actualPoints, 0, 0, std::numeric_limits<uint32_t>::max());
+
+            Assert::IsTrue(actualPoints.size() == 0);
+        }
+
+        TEST_METHOD(TimeSeriesBucketTestsSingleInteger)
+        {
+            auto config = GetSimpleConfig();
+            TimeSeriesBucket bucket(config);
+            TimeSeriesPoints actualPoints;
+            TimeSeriesPoints expectedPoints{ { 1,1000 }};
+            for (auto &point : expectedPoints)
+            {
+                bucket.AddValue(point.value, point.timestamp);
+            }
+            bucket.Decompress(actualPoints, 0, 0, std::numeric_limits<uint32_t>::max());
+
             CompareVectors(expectedPoints, actualPoints);
         }
 
@@ -37,11 +63,30 @@ namespace ClothDBTest
             auto config = GetSimpleConfig();
             config.m_storeMilliseconds = true;
             TimeSeriesBucket bucket(config);
-            bucket.AddValue(1, 1001);
-            bucket.AddValue(2, 2002);
-
             TimeSeriesPoints actualPoints;
-            TimeSeriesPoints expectedPoints{ { 1001,1 },{ 2002,2 } };
+            TimeSeriesPoints expectedPoints{ { 1,1001 },{ 2,2002 } };
+            for (auto &point : expectedPoints)
+            {
+                bucket.AddValue(point.value, point.timestamp);
+            }
+            bucket.Decompress(actualPoints, 0, 0, std::numeric_limits<uint32_t>::max());
+
+            CompareVectors(expectedPoints, actualPoints);
+        }
+
+        TEST_METHOD(TimeSeriesBucketTestsSingleDouble)
+        {
+            auto config = GetSimpleConfig();
+            config.m_storeMilliseconds = true;
+            config.m_type = TimeSeriesType::TypeDouble;
+            TimeSeriesBucket bucket(config);
+            TimeSeriesPoints actualPoints;
+            TimeSeriesPoints expectedPoints{ { DoubleToUint64(1.1), 1001 }};
+            for (auto &point : expectedPoints)
+            {
+                bucket.AddValue(point.value, point.timestamp);
+            }
+
             bucket.Decompress(actualPoints, 0, 0, std::numeric_limits<uint32_t>::max());
 
             CompareVectors(expectedPoints, actualPoints);
@@ -53,11 +98,18 @@ namespace ClothDBTest
             config.m_storeMilliseconds = true;
             config.m_type = TimeSeriesType::TypeDouble;
             TimeSeriesBucket bucket(config);
-            bucket.AddValue(1.1, 1001);
-            bucket.AddValue(2.2, 2002);
-
             TimeSeriesPoints actualPoints;
-            TimeSeriesPoints expectedPoints{ { 1001,1.1 },{ 2002,2.2 } };
+            TimeSeriesPoints expectedPoints
+            { 
+                { DoubleToUint64(1.1), 1001 },
+                { DoubleToUint64(2.2), 2002 },
+                { DoubleToUint64(32.32), 202002, }
+            };
+            for (auto &point : expectedPoints)
+            {
+                bucket.AddValue(point.value, point.timestamp);
+            }
+
             bucket.Decompress(actualPoints, 0, 0, std::numeric_limits<uint32_t>::max());
 
             CompareVectors(expectedPoints, actualPoints);
@@ -79,6 +131,11 @@ namespace ClothDBTest
                 Assert::AreEqual(expectedValues[i].timestamp, actualValues[i].timestamp);
                 Assert::AreEqual(expectedValues[i].value, actualValues[i].value);
             }
+        }
+
+        uint64_t DoubleToUint64(double value)
+        {
+            return *((uint64_t*)&value);
         }
     };
 }

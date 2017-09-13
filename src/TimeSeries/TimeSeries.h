@@ -28,11 +28,12 @@ private:
     uint64_t FloorToHour(uint64_t timestamp);
 
     int NextBucket(int bucket);
+    int LastBucketIndex();
 private:
     std::shared_ptr<TimeSeriesConfig> m_config;
     std::vector<std::unique_ptr<TimeSeriesBucket>> m_buckets;
-    int m_startBucket;
-    int m_endBucket;
+    int m_firstBucketIndex;
+    int m_firstEmptyIndex;
     uint64_t m_startHour;
     uint64_t m_lastTimestamp;
     RTL_SRWLOCK m_srwLock;

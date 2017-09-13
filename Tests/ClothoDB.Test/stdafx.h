@@ -5,11 +5,12 @@
 
 #pragma once
 
+#include <limits>
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "targetver.h"
 
 // Headers for CppUnitTest
 #include "CppUnitTest.h"
-
-#include <memory>
-#include <string>
-#include <vector>
