@@ -159,6 +159,7 @@
   <ItemGroup>
     <ClCompile Include="BitStreamCompression.Tests.cpp" />
     <ClCompile Include="BitUtils.Tests.cpp" />
+    <ClCompile Include="CircularBuffer.Tests.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
