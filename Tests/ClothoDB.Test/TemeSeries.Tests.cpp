@@ -3,6 +3,7 @@
 #include <functional>
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
+#include "src/TimeSeries/constants.h"
 #include "src/TimeSeries/TimeSeries.h"
 
 using namespace incolun::clothodb;
@@ -126,6 +127,7 @@ namespace ClothDBTest
                 timeSeries.AddValue(point.value, point.timestamp);
             }
 
+            Assert::AreEqual(2, (int)timeSeries.StoredHours());
             auto result = timeSeries.GetPoints(0, 0xffffffffffffffff);
 
             auto actualPoints = result.value.get();
@@ -138,29 +140,61 @@ namespace ClothDBTest
             config->m_type = TimeSeriesType::TypeInteger;
             TimeSeries timeSeries(config);
             uint64_t startTime = 1000;
+
             std::vector<TimeSeriesPoint> expectedPoints;
-            for (int hour = 0; hour < 26; ++hour)
+            for (int hour = 0; hour <= Constants::kMaxBuckets; ++hour)
             {
                 for (int minute = 0; minute < 60; ++minute)
                 {
                     uint64_t totalMintes = hour * 60 + minute;
                     uint64_t timestamp = startTime + totalMintes * 60 * 1000;
-                    if (hour == 25)
-                    {
-                        int i = 0;
-                        ++i;
-                    }
                     timeSeries.AddValue(totalMintes, timestamp);
-                    if(hour >= 2)
+                    if(hour >= 1)
                         expectedPoints.push_back({ totalMintes, timestamp });
                 }
             }
+            auto storedHours = timeSeries.StoredHours();
+            Assert::AreEqual(Constants::kMaxBuckets, storedHours);
+            auto result = timeSeries.GetPoints(0, 0xffffffffffffffff);
+            
+            auto actualPoints = result.value.get();
+            CompareVectors(expectedPoints, *actualPoints);
+        }
+        
+        TEST_METHOD(TimeSeriesTestRemoveOldData)
+        {
+            auto config = GetSimpleConfig();
+            config->m_type = TimeSeriesType::TypeInteger;
+            TimeSeries timeSeries(config);
+            uint64_t startTime = 1000;
 
+            uint64_t oldTime = 0;
+            std::vector<TimeSeriesPoint> expectedPoints;
+            for (int hour = 0; hour <= Constants::kMaxBuckets; ++hour)
+            {
+                if (hour < 3)
+                {
+                    oldTime = hour * Constants::kOneHourInMs;
+                }
+                for (int minute = 0; minute < 60; ++minute)
+                {
+                    uint64_t totalMintes = hour * 60 + minute;
+                    uint64_t timestamp = startTime + totalMintes * 60 * 1000;
+                    timeSeries.AddValue(totalMintes, timestamp);
+                    if (hour >= 3)
+                        expectedPoints.push_back({ totalMintes, timestamp });
+                }
+            }
+            oldTime += 60 * 1000;
+            timeSeries.RemoveOldData(oldTime);
+            auto storedHours = timeSeries.StoredHours();
+            Assert::AreEqual(Constants::kMaxBuckets - 2, storedHours);
             auto result = timeSeries.GetPoints(0, 0xffffffffffffffff);
 
             auto actualPoints = result.value.get();
             CompareVectors(expectedPoints, *actualPoints);
         }
+        
 
     private:
         std::shared_ptr<TimeSeriesConfig> GetSimpleConfig()

@@ -69,7 +69,7 @@ void TimeSeriesBucket::AddValue(uint64_t value, uint32_t timestamp)
 
 void TimeSeriesBucket::Decompress(
     std::vector<TimeSeriesPoint>& points, 
-    uint64_t baseTimeInSec,
+    uint64_t baseTimeInMs,
     uint64_t startTime, 
     uint64_t endTime)
 {
@@ -92,8 +92,8 @@ void TimeSeriesBucket::Decompress(
     
     TimeStampDecompressor timeStampDecompressor(reader);
     uint64_t timestamp = timeStampDecompressor.GetFirstValue();
-    timestamp += baseTimeInSec;
     timestamp *= 1000;
+    timestamp += baseTimeInMs;
 
     uint64_t value = decompressor->GetFirstValue();
     if (m_config.m_storeMilliseconds)
@@ -109,8 +109,8 @@ void TimeSeriesBucket::Decompress(
     while (reader.CanRead() && reader.GetPosition() < toDecompress)
     {
         timestamp = timeStampDecompressor.GetNextValue();
-        timestamp += baseTimeInSec;
         timestamp *= 1000;
+        timestamp += baseTimeInMs;
 
         value = decompressor->GetNextValue();
 

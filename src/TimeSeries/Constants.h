@@ -17,6 +17,7 @@ public:
 
     static constexpr uint32_t kOneHourInSeconds = 60 * 60;
     static constexpr uint32_t kOneHourInMs = kOneHourInSeconds * 1000;
+    static constexpr size_t kMaxBuckets = 25;
 };
 
 }}
