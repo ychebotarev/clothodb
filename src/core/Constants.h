@@ -2,8 +2,8 @@
 
 #include <cstdint>
 
-namespace incolun {
 namespace clothodb {
+namespace core {
 
 class Constants
 {

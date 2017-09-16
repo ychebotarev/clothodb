@@ -5,57 +5,57 @@
 #include <vector>
 #include <intrin.h>
 
-namespace incolun{
-namespace clothodb{
+namespace clothodb {
+namespace core {
 
-class BitUtils
+class bit_utils
 {
 public:
     // Write specified number of bits from value into byte buffer
-    // bitPosision indicates starting position in bits
-    static void WriteBits32(
+    // bit_posision indicates starting position in bits
+    static void write_bits32(
         std::vector<uint8_t>& buffer,
-        uint32_t bitPosision,
+        uint32_t bit_posision,
         uint32_t value,
-        uint8_t bitsToStore);
+        uint8_t bits_to_store);
 
-    static void WriteBits64(
+    static void write_bits64(
         std::vector<uint8_t>& buffer,
-        uint32_t bitPosision,
+        uint32_t bit_posision,
         uint64_t value,
-        uint8_t bitsToStore);
+        uint8_t bits_to_store);
 
-    static uint32_t ReadBit(
+    static uint32_t read_bit(
         const std::vector<uint8_t>& buffer,
-        uint32_t bitPosision);
+        uint32_t bit_posision);
 
-    static uint32_t ReadBits32(
+    static uint32_t read_bits32(
         const std::vector<uint8_t>& buffer,
-        uint32_t bitPosision,
-        uint8_t bitsToRead);
+        uint32_t bit_posision,
+        uint8_t bits_to_read);
 
-    static uint64_t ReadBits64(
+    static uint64_t read_bits64(
         const std::vector<uint8_t>& buffer,
-        uint32_t bitPosision,
-        uint8_t bitsToRead);
+        uint32_t bit_posision,
+        uint8_t bits_to_read);
 
-    static uint8_t ReadHiBits(uint8_t byte, uint8_t bitsToRead);
-    static uint8_t ReadLoBits(uint8_t byte, uint8_t bitsToRead);
-    static uint8_t ReadMidBits(uint8_t byte, uint8_t start, uint8_t bitsToRead);
+    static uint8_t read_hi_bits(uint8_t byte, uint8_t bits_to_read);
+    static uint8_t read_lo_bits(uint8_t byte, uint8_t bits_to_read);
+    static uint8_t read_mid_bits(uint8_t byte, uint8_t start, uint8_t bits_to_read);
     
-    inline static uint32_t EncodeZigZag32(int32_t n) {
+    inline static uint32_t encode_zig_zag32(int32_t n) {
         return (n << 1) ^ (n >> 31);
     }
     
-    inline static uint64_t EncodeZigZag64(int64_t n) {
+    inline static uint64_t encode_zig_zag64(int64_t n) {
         return (n << 1) ^ (n >> 63);
     }
 
-    inline static int32_t DecodeZigZag32(uint32_t n) {
+    inline static int32_t decode_zig_zag32(uint32_t n) {
         return (n >> 1) ^ -((int32_t)n & 1);
     }
 
-    inline static int64_t DecodeZigZag64(uint64_t n) {
+    inline static int64_t decode_zig_zag64(uint64_t n) {
         return (n >> 1) ^ -((int64_t)n & 1);
     }
 #ifdef _MSC_VER
@@ -121,17 +121,17 @@ public:
 
 private:
     template <typename T>
-    static void WriteBits(
+    static void write_bits(
         std::vector<uint8_t>& buffer,
-        uint32_t bitPosision,
+        uint32_t bit_posision,
         T value,
-        uint8_t bitsToStore);
+        uint8_t bits_to_store);
 
     template <typename T>
-    static T ReadBits(
+    static T read_bits(
         const std::vector<uint8_t>& buffer,
-        uint32_t bitPosision,
-        uint8_t bitsToRead);
+        uint32_t bit_posision,
+        uint8_t bits_to_store);
 };
 
 }} ////end of incolun::clothodb

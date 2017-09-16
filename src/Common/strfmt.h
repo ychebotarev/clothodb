@@ -1,32 +1,32 @@
 #pragma once
 
-namespace cornerstone {
 namespace clothodb {
+namespace common {
 
-	template<int N>
-	class strfmt 
+template<int N>
+class strfmt 
+{
+public:
+	strfmt(const char* fmt)
+		: m_fmt(fmt)
+	{}
+
+	template<typename ... TArgs>
+	const char* fmt(TArgs... args) 
 	{
-	public:
-		strfmt(const char* fmt)
-			: fmt_(fmt) 
-		{}
+		::snprintf(m_bufffer, N, m_fmt, args...);
+		return m_bufffer;
+	}
 
-		template<typename ... TArgs>
-		const char* fmt(TArgs... args) 
-		{
-			::snprintf(buf_, N, fmt_, args...);
-			return buf_;
-		}
+private:
+	strfmt(const strfmt&) = delete;
+	strfmt& operator=(const strfmt&) = delete;
+private:
+	char m_bufffer[N];
+	const char* m_fmt;
+};
 
-	private:
-		strfmt(const strfmt&) = delete;
-		strfmt& operator=(const strfmt&) = delete;
-	private:
-		char buf_[N];
-		const char* fmt_;
-	};
-
-	typedef strfmt<100> sstrfmt;
-	typedef strfmt<300> lstrfmt;
+typedef strfmt<100> sstrfmt;
+typedef strfmt<300> lstrfmt;
 
 }}

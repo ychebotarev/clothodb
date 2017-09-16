@@ -7,123 +7,123 @@
 #include "CppUnitTest.h"
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
-#include "src/TimeSeries/TimeSeriesBucket.h"
+#include "src/core/ts_bucket.h"
 
-using namespace incolun::clothodb;
+using namespace clothodb::core;
 
 namespace ClothDBTest
 {
-    using TimeSeriesPoints = std::vector<TimeSeriesPoint>;
+    using ts_points = std::vector<ts_point>;
 
     TEST_CLASS(TimeSeriesBucketTests)
     {
     public:
         TEST_METHOD(TimeSeriesBucketTestsSimple)
         {
-            auto config = GetSimpleConfig();
-            TimeSeriesBucket bucket(config);
-            TimeSeriesPoints actualPoints;
-            TimeSeriesPoints expectedPoints{ {1, 1000}, {2, 2000} };
-            for (auto &point : expectedPoints)
+            auto properties = get_properties();
+            ts_bucket bucket(properties);
+            ts_points actual_points;
+            ts_points expected_points{ {1, 1000}, {2, 2000} };
+            for (auto &point : expected_points)
             {
-                bucket.AddValue(point.value, point.timestamp);
+                bucket.add_value(point.value, point.timestamp);
             }
-            bucket.Decompress(actualPoints, 0,0, std::numeric_limits<uint32_t>::max());
+            bucket.decompress(actual_points, 0,0, std::numeric_limits<uint32_t>::max());
             
-            CompareVectors(expectedPoints, actualPoints);
+            compare_vectors(expected_points, actual_points);
         }
 
         TEST_METHOD(TimeSeriesBucketTestsEmpty)
         {
-            auto config = GetSimpleConfig();
-            TimeSeriesBucket bucket(config);
-            TimeSeriesPoints actualPoints;
-            bucket.Decompress(actualPoints, 0, 0, std::numeric_limits<uint32_t>::max());
+            auto properties = get_properties();
+            ts_bucket bucket(properties);
+            ts_points actual_points;
+            bucket.decompress(actual_points, 0, 0, std::numeric_limits<uint32_t>::max());
 
-            Assert::IsTrue(actualPoints.size() == 0);
+            Assert::IsTrue(actual_points.size() == 0);
         }
 
         TEST_METHOD(TimeSeriesBucketTestsSingleInteger)
         {
-            auto config = GetSimpleConfig();
-            TimeSeriesBucket bucket(config);
-            TimeSeriesPoints actualPoints;
-            TimeSeriesPoints expectedPoints{ { 1,1000 }};
-            for (auto &point : expectedPoints)
+            auto properties = get_properties();
+            ts_bucket bucket(properties);
+            ts_points actual_points;
+            ts_points expected_points{ { 1,1000 }};
+            for (auto &point : expected_points)
             {
-                bucket.AddValue(point.value, point.timestamp);
+                bucket.add_value(point.value, point.timestamp);
             }
-            bucket.Decompress(actualPoints, 0, 0, std::numeric_limits<uint32_t>::max());
+            bucket.decompress(actual_points, 0, 0, std::numeric_limits<uint32_t>::max());
 
-            CompareVectors(expectedPoints, actualPoints);
+            compare_vectors(expected_points, actual_points);
         }
 
         TEST_METHOD(TimeSeriesBucketTestsMilliseconds)
         {
-            auto config = GetSimpleConfig();
-            config.m_storeMilliseconds = true;
-            TimeSeriesBucket bucket(config);
-            TimeSeriesPoints actualPoints;
-            TimeSeriesPoints expectedPoints{ { 1,1001 },{ 2,2002 } };
-            for (auto &point : expectedPoints)
+            auto properties = get_properties();
+            properties.m_store_milliseconds = true;
+            ts_bucket bucket(properties);
+            ts_points actual_points;
+            ts_points expected_points{ { 1,1001 },{ 2,2002 } };
+            for (auto &point : expected_points)
             {
-                bucket.AddValue(point.value, point.timestamp);
+                bucket.add_value(point.value, point.timestamp);
             }
-            bucket.Decompress(actualPoints, 0, 0, std::numeric_limits<uint32_t>::max());
+            bucket.decompress(actual_points, 0, 0, std::numeric_limits<uint32_t>::max());
 
-            CompareVectors(expectedPoints, actualPoints);
+            compare_vectors(expected_points, actual_points);
         }
 
         TEST_METHOD(TimeSeriesBucketTestsSingleDouble)
         {
-            auto config = GetSimpleConfig();
-            config.m_storeMilliseconds = true;
-            config.m_type = TimeSeriesType::TypeDouble;
-            TimeSeriesBucket bucket(config);
-            TimeSeriesPoints actualPoints;
-            TimeSeriesPoints expectedPoints{ { DoubleToUint64(1.1), 1001 }};
-            for (auto &point : expectedPoints)
+            auto properties = get_properties();
+            properties.m_store_milliseconds = true;
+            properties.m_type = ts_type::TypeDouble;
+            ts_bucket bucket(properties);
+            ts_points actual_points;
+            ts_points expected_points{ { DoubleToUint64(1.1), 1001 }};
+            for (auto &point : expected_points)
             {
-                bucket.AddValue(point.value, point.timestamp);
+                bucket.add_value(point.value, point.timestamp);
             }
 
-            bucket.Decompress(actualPoints, 0, 0, std::numeric_limits<uint32_t>::max());
+            bucket.decompress(actual_points, 0, 0, std::numeric_limits<uint32_t>::max());
 
-            CompareVectors(expectedPoints, actualPoints);
+            compare_vectors(expected_points, actual_points);
         }
 
         TEST_METHOD(TimeSeriesBucketTestsDouble)
         {
-            auto config = GetSimpleConfig();
-            config.m_storeMilliseconds = true;
-            config.m_type = TimeSeriesType::TypeDouble;
-            TimeSeriesBucket bucket(config);
-            TimeSeriesPoints actualPoints;
-            TimeSeriesPoints expectedPoints
+            auto properties = get_properties();
+            properties.m_store_milliseconds = true;
+            properties.m_type = ts_type::TypeDouble;
+            ts_bucket bucket(properties);
+            ts_points actual_points;
+            ts_points expected_points
             { 
                 { DoubleToUint64(1.1), 1001 },
                 { DoubleToUint64(2.2), 2002 },
                 { DoubleToUint64(32.32), 202002, }
             };
-            for (auto &point : expectedPoints)
+            for (auto &point : expected_points)
             {
-                bucket.AddValue(point.value, point.timestamp);
+                bucket.add_value(point.value, point.timestamp);
             }
 
-            bucket.Decompress(actualPoints, 0, 0, std::numeric_limits<uint32_t>::max());
+            bucket.decompress(actual_points, 0, 0, std::numeric_limits<uint32_t>::max());
 
-            CompareVectors(expectedPoints, actualPoints);
+            compare_vectors(expected_points, actual_points);
         }
 
     private:
-        TimeSeriesConfig GetSimpleConfig()
+        ts_properties get_properties()
         {
-            TimeSeriesConfig config;
-            config.m_metricName = "test";
-            return config;
+            ts_properties properties;
+            properties.m_name = "test";
+            return properties;
         }
 
-        void CompareVectors(const TimeSeriesPoints& expectedValues, const TimeSeriesPoints& actualValues)
+        void compare_vectors(const ts_points& expectedValues, const ts_points& actualValues)
         {
             Assert::AreEqual(expectedValues.size(), actualValues.size());
             for (int i = 0; i < expectedValues.size(); ++i)

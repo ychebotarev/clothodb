@@ -3,10 +3,10 @@
 #include <string>
 #include <memory>
 
-namespace incolun {
 namespace clothodb {
+namespace common {
 
-enum LogEvent
+enum log_event
 {
     Debug,
     Information,
@@ -24,32 +24,32 @@ public:
 	~ILogger()
 	{}
     
-	virtual void Log(LogEvent event, const std::string& message)
+	virtual void log(log_event event, const std::string& message)
 	{};
 
-	void LogDebug(const std::string& message)
+	void log_debug(const std::string& message)
 	{
-		Log(LogEvent::Debug, message);
+        log(log_event::Debug, message);
 	}
 
-	void LogInformation(const std::string& message)
+	void log_information(const std::string& message)
 	{
-		Log(LogEvent::Information, message);
+		log(log_event::Information, message);
 	}
-	void LogWarning(const std::string& message)
+	void log_warning(const std::string& message)
 	{
-		Log(LogEvent::Warning, message);
+        log(log_event::Warning, message);
 	}
-	void LogException(const std::string& message)
+	void log_exception(const std::string& message)
 	{
-		Log(LogEvent::Exception, message);
+        log(log_event::Exception, message);
 	}
-	void LogAlert(const std::string& message)
+	void log_alert(const std::string& message)
 	{
-		Log(LogEvent::Alert, message);
+        log(log_event::Alert, message);
 	}
 
-	static std::shared_ptr<ILogger> Instance()
+	static std::shared_ptr<ILogger> instance()
 	{
 		return ILogger::sLogger;
 	}

@@ -8,10 +8,12 @@
 
 #include "src/common/Result.h"
 
-namespace incolun {
+using namespace clothodb::common;
+
 namespace clothodb {
+namespace core {
 
 template<class T>
-using VectorOrError = Result<std::shared_ptr<std::vector<T>>, uint32_t>;
+using vector_or_error = Result<std::shared_ptr<std::vector<T>>, uint32_t>;
 
 }}

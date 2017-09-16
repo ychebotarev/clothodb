@@ -3,8 +3,8 @@
 #include <windows.h>
 #include <Synchapi.h>
 
-namespace incolun{
-namespace clothodb{
+namespace clothodb {
+namespace common {
 
 class SRWLockShared
 {

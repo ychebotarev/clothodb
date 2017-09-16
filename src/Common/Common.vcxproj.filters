@@ -24,10 +24,10 @@
     <ClInclude Include="Logger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CircularBuffer.h">
+    <ClInclude Include="strfmt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="strfmt.h">
+    <ClInclude Include="circular_buffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

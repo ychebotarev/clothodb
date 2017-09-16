@@ -3,10 +3,10 @@
 #include <functional>
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
-#include "src/TimeSeries/constants.h"
-#include "src/TimeSeries/TimeSeries.h"
+#include "src/core/constants.h"
+#include "src/core/time_series.h"
 
-using namespace incolun::clothodb;
+using namespace clothodb::core;
 
 namespace ClothDBTest
 {
@@ -15,161 +15,161 @@ namespace ClothDBTest
     public:
         TEST_METHOD(TimeSeriesTestSimple)
         {
-            auto config = GetSimpleConfig();
-            TimeSeries timeSeries(config);
-            std::vector<TimeSeriesPoint> expectedPoints{ { 1, 1000 },{ 2, 2000 } };
-            for (auto &point : expectedPoints)
+            auto properties = CreateProperties();
+            time_series timeSeries(properties);
+            std::vector<ts_point> expected_points{ { 1, 1000 },{ 2, 2000 } };
+            for (auto &point : expected_points)
             {
-                timeSeries.AddValue(point.value, point.timestamp);
+                timeSeries.add_value(point.value, point.timestamp);
             }
 
-            auto result = timeSeries.GetPoints(0, 0xffffffffffffffff);
+            auto result = timeSeries.get_points(0, 0xffffffffffffffff);
 
-            auto actualPoints = result.value.get();
-            CompareVectors(expectedPoints, *actualPoints);
+            auto actual_points = result.value.get();
+            compare_vectors(expected_points, *actual_points);
         }
 
         TEST_METHOD(TimeSeriesTestEmpty)
         {
-            auto config = GetSimpleConfig();
-            TimeSeries timeSeries(config);
+            auto properties = CreateProperties();
+            time_series timeSeries(properties);
 
-            auto result = timeSeries.GetPoints(0, 0xffffffffffffffff);
+            auto result = timeSeries.get_points(0, 0xffffffffffffffff);
 
-            auto actualPoints = result.value.get();
-            Assert::IsTrue(actualPoints->size() == 0);
+            auto actual_points = result.value.get();
+            Assert::IsTrue(actual_points->size() == 0);
         }
 
         TEST_METHOD(TimeSeriesTestSimpleInteger)
         {
-            auto config = GetSimpleConfig();
-            TimeSeries timeSeries(config);
-            std::vector<TimeSeriesPoint> expectedPoints{ { 0, 1000 } };
-            for (auto &point : expectedPoints)
+            auto properties = CreateProperties();
+            time_series timeSeries(properties);
+            std::vector<ts_point> expected_points{ { 0, 1000 } };
+            for (auto &point : expected_points)
             {
-                timeSeries.AddValue(point.value, point.timestamp);
+                timeSeries.add_value(point.value, point.timestamp);
             }
-            auto result = timeSeries.GetPoints(0, 0xffffffffffffffff);
+            auto result = timeSeries.get_points(0, 0xffffffffffffffff);
 
-            auto actualPoints = result.value.get();
-            CompareVectors(expectedPoints, *actualPoints);
+            auto actual_points = result.value.get();
+            compare_vectors(expected_points, *actual_points);
         }
         
         TEST_METHOD(TimeSeriesTestSimpleDouble)
         {
-            auto config = GetSimpleConfig();
-            config->m_type = TimeSeriesType::TypeDouble;
-            TimeSeries timeSeries(config);
-            std::vector<TimeSeriesPoint> expectedPoints{ { 0, 1000 } };
-            for (auto &point : expectedPoints)
+            auto properties = CreateProperties();
+            properties->m_type = ts_type::TypeDouble;
+            time_series timeSeries(properties);
+            std::vector<ts_point> expected_points{ { 0, 1000 } };
+            for (auto &point : expected_points)
             {
-                timeSeries.AddValue(point.value, point.timestamp);
+                timeSeries.add_value(point.value, point.timestamp);
             }
-            auto result = timeSeries.GetPoints(0, 0xffffffffffffffff);
+            auto result = timeSeries.get_points(0, 0xffffffffffffffff);
 
-            auto actualPoints = result.value.get();
-            CompareVectors(expectedPoints, *actualPoints);
+            auto actual_points = result.value.get();
+            compare_vectors(expected_points, *actual_points);
         }
         
         TEST_METHOD(TimeSeriesTestSimpleMilliseconds)
         {
-            auto config = GetSimpleConfig();
-            config->m_type = TimeSeriesType::TypeDouble;
-            config->m_storeMilliseconds = true;
-            TimeSeries timeSeries(config);
-            std::vector<TimeSeriesPoint> expectedPoints{ { 0, 1000 } };
-            for (auto &point : expectedPoints)
+            auto properties = CreateProperties();
+            properties->m_type = ts_type::TypeDouble;
+            properties->m_store_milliseconds = true;
+            time_series timeSeries(properties);
+            std::vector<ts_point> expected_points{ { 0, 1000 } };
+            for (auto &point : expected_points)
             {
-                timeSeries.AddValue(point.value, point.timestamp);
+                timeSeries.add_value(point.value, point.timestamp);
             }
 
-            auto result = timeSeries.GetPoints(0, 0xffffffffffffffff);
+            auto result = timeSeries.get_points(0, 0xffffffffffffffff);
 
-            auto actualPoints = result.value.get();
-            CompareVectors(expectedPoints, *actualPoints);
+            auto actual_points = result.value.get();
+            compare_vectors(expected_points, *actual_points);
         }
 
         TEST_METHOD(TimeSeriesTestSimpleNoMilliseconds)
         {
-            auto config = GetSimpleConfig();
-            config->m_type = TimeSeriesType::TypeDouble;
-            TimeSeries timeSeries(config);
-            std::vector<TimeSeriesPoint> expectedPoints{ { 0, 1000 } };
-            for (auto &point : expectedPoints)
+            auto properties = CreateProperties();
+            properties->m_type = ts_type::TypeDouble;
+            time_series timeSeries(properties);
+            std::vector<ts_point> expected_points{ { 0, 1000 } };
+            for (auto &point : expected_points)
             {
-                timeSeries.AddValue(point.value, point.timestamp);
+                timeSeries.add_value(point.value, point.timestamp);
             }
             
-            auto result = timeSeries.GetPoints(0, 0xffffffffffffffff);
+            auto result = timeSeries.get_points(0, 0xffffffffffffffff);
 
-            auto actualPoints = result.value.get();
-            CompareVectors(expectedPoints, *actualPoints);
+            auto actual_points = result.value.get();
+            compare_vectors(expected_points, *actual_points);
         }
 
         TEST_METHOD(TimeSeriesTestMultipleBucketsSimple)
         {
-            auto config = GetSimpleConfig();
-            config->m_type = TimeSeriesType::TypeInteger;
-            TimeSeries timeSeries(config);
+            auto properties = CreateProperties();
+            properties->m_type = ts_type::TypeInteger;
+            time_series timeSeries(properties);
             uint64_t startTime = 1000;
-            std::vector<TimeSeriesPoint> expectedPoints;
+            std::vector<ts_point> expected_points;
             for (int hour = 0; hour < 2; ++hour)
             {
                 for (int minute = 0; minute < 60; ++minute)
                 {
                     uint64_t totalMintes = hour * 60 + minute;
                     uint64_t timestamp = startTime + totalMintes * 60 * 1000;
-                    expectedPoints.push_back({ totalMintes, timestamp });
+                    expected_points.push_back({ totalMintes, timestamp });
                 }
             }
-            for (auto &point : expectedPoints)
+            for (auto &point : expected_points)
             {
-                timeSeries.AddValue(point.value, point.timestamp);
+                timeSeries.add_value(point.value, point.timestamp);
             }
 
-            Assert::AreEqual(2, (int)timeSeries.StoredHours());
-            auto result = timeSeries.GetPoints(0, 0xffffffffffffffff);
+            Assert::AreEqual(2, (int)timeSeries.stored_hours());
+            auto result = timeSeries.get_points(0, 0xffffffffffffffff);
 
-            auto actualPoints = result.value.get();
-            CompareVectors(expectedPoints, *actualPoints);
+            auto actual_points = result.value.get();
+            compare_vectors(expected_points, *actual_points);
         }
 
         TEST_METHOD(TimeSeriesTestMultipleBucketsOverflaw)
         {
-            auto config = GetSimpleConfig();
-            config->m_type = TimeSeriesType::TypeInteger;
-            TimeSeries timeSeries(config);
+            auto properties = CreateProperties();
+            properties->m_type = ts_type::TypeInteger;
+            time_series timeSeries(properties);
             uint64_t startTime = 1000;
 
-            std::vector<TimeSeriesPoint> expectedPoints;
+            std::vector<ts_point> expected_points;
             for (int hour = 0; hour <= Constants::kMaxBuckets; ++hour)
             {
                 for (int minute = 0; minute < 60; ++minute)
                 {
                     uint64_t totalMintes = hour * 60 + minute;
                     uint64_t timestamp = startTime + totalMintes * 60 * 1000;
-                    timeSeries.AddValue(totalMintes, timestamp);
+                    timeSeries.add_value(totalMintes, timestamp);
                     if(hour >= 1)
-                        expectedPoints.push_back({ totalMintes, timestamp });
+                        expected_points.push_back({ totalMintes, timestamp });
                 }
             }
-            auto storedHours = timeSeries.StoredHours();
+            auto storedHours = timeSeries.stored_hours();
             Assert::AreEqual(Constants::kMaxBuckets, storedHours);
-            auto result = timeSeries.GetPoints(0, 0xffffffffffffffff);
+            auto result = timeSeries.get_points(0, 0xffffffffffffffff);
             
-            auto actualPoints = result.value.get();
-            CompareVectors(expectedPoints, *actualPoints);
+            auto actual_points = result.value.get();
+            compare_vectors(expected_points, *actual_points);
         }
         
         TEST_METHOD(TimeSeriesTestRemoveOldData)
         {
-            auto config = GetSimpleConfig();
-            config->m_type = TimeSeriesType::TypeInteger;
-            TimeSeries timeSeries(config);
+            auto properties = CreateProperties();
+            properties->m_type = ts_type::TypeInteger;
+            time_series timeSeries(properties);
             uint64_t startTime = 1000;
 
             uint64_t oldTime = 0;
-            std::vector<TimeSeriesPoint> expectedPoints;
+            std::vector<ts_point> expected_points;
             for (int hour = 0; hour <= Constants::kMaxBuckets; ++hour)
             {
                 if (hour < 3)
@@ -180,33 +180,32 @@ namespace ClothDBTest
                 {
                     uint64_t totalMintes = hour * 60 + minute;
                     uint64_t timestamp = startTime + totalMintes * 60 * 1000;
-                    timeSeries.AddValue(totalMintes, timestamp);
+                    timeSeries.add_value(totalMintes, timestamp);
                     if (hour >= 3)
-                        expectedPoints.push_back({ totalMintes, timestamp });
+                        expected_points.push_back({ totalMintes, timestamp });
                 }
             }
             oldTime += 60 * 1000;
-            timeSeries.RemoveOldData(oldTime);
-            auto storedHours = timeSeries.StoredHours();
+            timeSeries.remove_old_data(oldTime);
+            auto storedHours = timeSeries.stored_hours();
             Assert::AreEqual(Constants::kMaxBuckets - 2, storedHours);
-            auto result = timeSeries.GetPoints(0, 0xffffffffffffffff);
+            auto result = timeSeries.get_points(0, 0xffffffffffffffff);
 
-            auto actualPoints = result.value.get();
-            CompareVectors(expectedPoints, *actualPoints);
-        }
-        
+            auto actual_points = result.value.get();
+            compare_vectors(expected_points, *actual_points);
+        }        
 
     private:
-        std::shared_ptr<TimeSeriesConfig> GetSimpleConfig()
+        std::shared_ptr<ts_properties> CreateProperties()
         {
-            auto config = std::make_shared<TimeSeriesConfig>();
-            config->m_metricName = "test";
-            return config;
+            auto properties = std::make_shared<ts_properties>();
+            properties->m_name = "test";
+            return properties;
         }
 
-        void CompareVectors(
-            const std::vector<TimeSeriesPoint>& expectedValues, 
-            const std::vector<TimeSeriesPoint>& actualValues)
+        void compare_vectors(
+            const std::vector<ts_point>& expectedValues, 
+            const std::vector<ts_point>& actualValues)
         {
             Assert::AreEqual(expectedValues.size(), actualValues.size());
             for (int i = 0; i < expectedValues.size(); ++i)

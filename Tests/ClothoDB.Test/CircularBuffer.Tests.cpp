@@ -5,95 +5,95 @@
 #include "CppUnitTest.h"
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
-#include "src/Common/CircularBuffer.h"
+#include "src/Common/circular_buffer.h"
 
-using namespace incolun::clothodb;
+using namespace clothodb::common;
 
 namespace ClothDBTest
 {
-    TEST_CLASS(CircularBufferTests)
+    TEST_CLASS(circular_buffer_tests)
     {
     public:
-        TEST_METHOD(CircularBufferSizeTest)
+        TEST_METHOD(circular_buffer_size_test)
         {
-            CircularBuffer<int> buffer(10, GetterImpl, ResetImpl);
-            buffer.SetHeadIndex(0);
-            buffer.SetTailIndex(0);
-            Assert::AreEqual(1, (int)buffer.Size());
+            circular_buffer<int> buffer(10, GetterImpl, ResetImpl);
+            buffer.set_head_index(0);
+            buffer.set_tail_index(0);
+            Assert::AreEqual(1, (int)buffer.size());
 
-            buffer.SetHeadIndex(1);
-            buffer.SetTailIndex(0);
-            Assert::AreEqual(2, (int)buffer.Size());
+            buffer.set_head_index(1);
+            buffer.set_tail_index(0);
+            Assert::AreEqual(2, (int)buffer.size());
             
-            buffer.SetHeadIndex(9);
-            buffer.SetTailIndex(0);
-            Assert::AreEqual(10, (int)buffer.Size());
+            buffer.set_head_index(9);
+            buffer.set_tail_index(0);
+            Assert::AreEqual(10, (int)buffer.size());
             
-            buffer.SetHeadIndex(9);
-            buffer.SetTailIndex(9);
-            Assert::AreEqual(1, (int)buffer.Size());
+            buffer.set_head_index(9);
+            buffer.set_tail_index(9);
+            Assert::AreEqual(1, (int)buffer.size());
             
-            buffer.SetHeadIndex(10);
-            buffer.SetTailIndex(10);
-            Assert::AreEqual(1, (int)buffer.Size());
+            buffer.set_head_index(10);
+            buffer.set_tail_index(10);
+            Assert::AreEqual(1, (int)buffer.size());
 
-            buffer.SetHeadIndex(0);
-            buffer.SetTailIndex(1);
-            Assert::AreEqual(10, (int)buffer.Size());
+            buffer.set_head_index(0);
+            buffer.set_tail_index(1);
+            Assert::AreEqual(10, (int)buffer.size());
 
-            buffer.SetHeadIndex(0);
-            buffer.SetTailIndex(5);
-            Assert::AreEqual(6, (int)buffer.Size());
+            buffer.set_head_index(0);
+            buffer.set_tail_index(5);
+            Assert::AreEqual(6, (int)buffer.size());
         }
 
-        TEST_METHOD(CircularBufferPushHeadTest)
+        TEST_METHOD(circular_bufferPushHeadTest)
         {
-            CircularBufferTests::sValue = 0;
-            CircularBuffer<int> buffer(10, GetterImpl, ResetImpl);
-            buffer.MoveHeadForward();
-            Assert::AreEqual(1, (int)buffer.Size());
+            circular_buffer_tests::sValue = 0;
+            circular_buffer<int> buffer(10, GetterImpl, ResetImpl);
+            buffer.move_head_forward();
+            Assert::AreEqual(1, (int)buffer.size());
             for (int i = 1; i < 10; ++i)
             {
-                buffer.MoveHeadForward();
-                Assert::AreEqual(1 + i, (int)buffer.Size());
+                buffer.move_head_forward();
+                Assert::AreEqual(1 + i, (int)buffer.size());
             }
             //catch tail
             for (int i = 0; i < 10; ++i)
             {
-                buffer.MoveHeadForward();
-                Assert::AreEqual(10, (int)buffer.Size());
+                buffer.move_head_forward();
+                Assert::AreEqual(10, (int)buffer.size());
             }
         }
 
-        TEST_METHOD(CircularBufferPushTailTest)
+        TEST_METHOD(circular_bufferPushTailTest)
         {
-            CircularBufferTests::sValue = 0;
-            CircularBuffer<int> buffer(10, GetterImpl, ResetImpl);
+            circular_buffer_tests::sValue = 0;
+            circular_buffer<int> buffer(10, GetterImpl, ResetImpl);
             
-            CheckException([&buffer]() { buffer.MoveTailForward(); }, true);
-            CheckException([&buffer]() 
+            check_exception([&buffer]() { buffer.move_tail_forward(); }, true);
+            check_exception([&buffer]() 
             { 
-                buffer.MoveHeadForward();
-                buffer.MoveTailForward();
+                buffer.move_head_forward();
+                buffer.move_tail_forward();
             }, false);
         }
 
-        TEST_METHOD(CircularBufferAtTest)
+        TEST_METHOD(circular_bufferAtTest)
         {
-            CircularBufferTests::sValue = 0;
-            CircularBuffer<int>::Resetter<int> resetter = [](int&) {};
-            CircularBuffer<int> buffer(10, GetterImpl, resetter);
+            circular_buffer_tests::sValue = 0;
+            circular_buffer<int>::item_resetter<int> resetter = [](int&) {};
+            circular_buffer<int> buffer(10, GetterImpl, resetter);
             for (int i = 0; i < 10; ++i)
             {
-                CircularBufferTests::sValue = i;
-                buffer.MoveHeadForward();
-                auto v = buffer.Head();
+                circular_buffer_tests::sValue = i;
+                buffer.move_head_forward();
+                auto v = buffer.head();
                 Assert::AreEqual(i, (int)v);
             }
         }
 
     private:
-        void CheckException(std::function<void()> func, bool expectException)
+        void check_exception(std::function<void()> func, bool expectException)
         {
             bool exceptionHappen = false;
             try
@@ -108,6 +108,7 @@ namespace ClothDBTest
         }
 
         static int sValue;
+        
         static int GetterImpl()
         {
             return sValue;
@@ -119,5 +120,5 @@ namespace ClothDBTest
         }
     };
     
-    int CircularBufferTests::sValue = 0;
+    int circular_buffer_tests::sValue = 0;
 }

@@ -2,13 +2,13 @@
 
 #include <cstdint>
 
-namespace incolun {
 namespace clothodb {
+namespace core {
 
-struct TimeSeriesPoint
+struct ts_point
 {
     uint64_t value;
     uint64_t timestamp;
 };
 
-}}//incolun::clothodb
+}}

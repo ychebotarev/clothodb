@@ -4,12 +4,12 @@
 #include "CppUnitTest.h"
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
-#include "src/TimeSeries/bitutils.h"
-#include "src/TimeSeries/bitstream.h"
-#include "src/TimeSeries/compressor/compressor.h"
-#include "src/TimeSeries/compressor/decompressor.h"
+#include "src/core/bit_utils.h"
+#include "src/core/bit_stream.h"
+#include "src/core/compressor/compressor.h"
+#include "src/core/compressor/decompressor.h"
 
-using namespace incolun::clothodb;
+using namespace clothodb::core;
 
 namespace ClothDBTest
 {		
@@ -18,14 +18,14 @@ namespace ClothDBTest
 	public:
         TEST_METHOD(SingleTimestamp)
         {
-			std::vector<uint32_t> expectedTimestamps;
-			expectedTimestamps.push_back(0x1EEF);
+			std::vector<uint32_t> expected_timestamps;
+			expected_timestamps.push_back(0x1EEF);
 
-			auto stream = Compressor::CompressTimestamps(expectedTimestamps);
-			auto actualTimestamps = Decompressor::DecompressTimeStamps(*stream.get());
+			auto stream = compressor::compress_timestamps(expected_timestamps);
+			auto actualTimestamps = decompressor::decompress_timestamps(*stream.get());
             
-            Assert::IsFalse(actualTimestamps.IsError());
-			CompareVectors(expectedTimestamps, *actualTimestamps.value.get());
+            Assert::IsFalse(actualTimestamps.is_error());
+			compare_vectors(expected_timestamps, *actualTimestamps.value.get());
         }
 		
         TEST_METHOD(SingleDoubleValue1)
@@ -34,11 +34,11 @@ namespace ClothDBTest
             uint64_t expectedValue = 0xDEADBEEF;
             expectedValues.push_back(*(double*)&expectedValue);
 
-            auto stream = Compressor::CompressDoubleValues(expectedValues);
-            auto actualValues = Decompressor::DecompressDoubleValues(*stream.get());
+            auto stream = compressor::compress_double_values(expectedValues);
+            auto actualValues = decompressor::decompress_double_values(*stream.get());
             
-            Assert::IsFalse(actualValues.IsError());
-            CompareVectors(expectedValues, *actualValues.value.get());
+            Assert::IsFalse(actualValues.is_error());
+            compare_vectors(expectedValues, *actualValues.value.get());
 
             uint64_t actualValue = *(uint64_t*)&actualValues.value->at(0);
             Assert::AreEqual(expectedValue, actualValue);
@@ -50,11 +50,11 @@ namespace ClothDBTest
             double expectedValue = 12.0; 
             expectedValues.push_back(expectedValue);
 
-            auto stream = Compressor::CompressDoubleValues(expectedValues);
-            auto actualValues = Decompressor::DecompressDoubleValues(*stream.get());
+            auto stream = compressor::compress_double_values(expectedValues);
+            auto actualValues = decompressor::decompress_double_values(*stream.get());
             
-            Assert::IsFalse(actualValues.IsError());
-            CompareVectors(expectedValues, *actualValues.value.get());
+            Assert::IsFalse(actualValues.is_error());
+            compare_vectors(expectedValues, *actualValues.value.get());
         }
 
         TEST_METHOD(SingleIntegerValue1)
@@ -63,11 +63,11 @@ namespace ClothDBTest
             uint64_t expectedValue = 0xDEADBEEF;
             expectedValues.push_back(expectedValue);
 
-            auto stream = Compressor::CompressIntegerValues(expectedValues);
-            auto actualValues = Decompressor::DecompressIntegerValues(*stream.get());
+            auto stream = compressor::compress_integer_values(expectedValues);
+            auto actualValues = decompressor::decompress_integer_values(*stream.get());
             
-            Assert::IsFalse(actualValues.IsError());
-            CompareVectors(expectedValues, *actualValues.value.get());
+            Assert::IsFalse(actualValues.is_error());
+            compare_vectors(expectedValues, *actualValues.value.get());
 
             uint64_t actualValue = actualValues.value->at(0);
             Assert::AreEqual(expectedValue, actualValue);
@@ -79,11 +79,11 @@ namespace ClothDBTest
             uint64_t expectedValue = 0xFFFFDEADBEEFFFFF;
             expectedValues.push_back(expectedValue);
 
-            auto stream = Compressor::CompressIntegerValues(expectedValues);
-            auto actualValues = Decompressor::DecompressIntegerValues(*stream.get());
+            auto stream = compressor::compress_integer_values(expectedValues);
+            auto actualValues = decompressor::decompress_integer_values(*stream.get());
             
-            Assert::IsFalse(actualValues.IsError());
-            CompareVectors(expectedValues, *actualValues.value.get());
+            Assert::IsFalse(actualValues.is_error());
+            compare_vectors(expectedValues, *actualValues.value.get());
 
             uint64_t actualValue = actualValues.value->at(0);
             Assert::AreEqual(expectedValue, actualValue);
@@ -99,11 +99,11 @@ namespace ClothDBTest
             expectedValues.push_back(31.0 / 10);
             expectedValues.push_back(28.2 / 10);
 
-            auto stream = Compressor::CompressDoubleValues(expectedValues);
-            auto actualValues = Decompressor::DecompressDoubleValues(*stream.get());
+            auto stream = compressor::compress_double_values(expectedValues);
+            auto actualValues = decompressor::decompress_double_values(*stream.get());
             
-            Assert::IsFalse(actualValues.IsError());
-            CompareVectors(expectedValues, *actualValues.value.get());
+            Assert::IsFalse(actualValues.is_error());
+            compare_vectors(expectedValues, *actualValues.value.get());
         }
 
         TEST_METHOD(MultipleTimestampValuesSimple)
@@ -116,11 +116,11 @@ namespace ClothDBTest
             expectedValues.push_back(28);
             expectedValues.push_back(27);
 
-            auto stream = Compressor::CompressTimestamps(expectedValues);
-            auto actualValues = Decompressor::DecompressTimeStamps(*stream.get());
+            auto stream = compressor::compress_timestamps(expectedValues);
+            auto actualValues = decompressor::decompress_timestamps(*stream.get());
             
-            Assert::IsFalse(actualValues.IsError());
-            CompareVectors(expectedValues, *actualValues.value.get());
+            Assert::IsFalse(actualValues.is_error());
+            compare_vectors(expectedValues, *actualValues.value.get());
         }
 
         TEST_METHOD(MultipleIntegerValuesSimple)
@@ -133,159 +133,159 @@ namespace ClothDBTest
             expectedValues.push_back(28);
             expectedValues.push_back(27);
 
-            auto stream = Compressor::CompressIntegerValues(expectedValues);
-            auto actualValues = Decompressor::DecompressIntegerValues(*stream.get());
+            auto stream = compressor::compress_integer_values(expectedValues);
+            auto actualValues = decompressor::decompress_integer_values(*stream.get());
             
-            Assert::IsFalse(actualValues.IsError());
-            CompareVectors(expectedValues, *actualValues.value.get());
+            Assert::IsFalse(actualValues.is_error());
+            compare_vectors(expectedValues, *actualValues.value.get());
         }
 
         TEST_METHOD(IncreasingTimestampSequenceSimple)
 		{
-			std::vector<uint32_t> expectedTimestamps;
-            expectedTimestamps.push_back(1);
-            expectedTimestamps.push_back(2);
-            expectedTimestamps.push_back(3);
+			std::vector<uint32_t> expected_timestamps;
+            expected_timestamps.push_back(1);
+            expected_timestamps.push_back(2);
+            expected_timestamps.push_back(3);
 
-			auto stream = Compressor::CompressTimestamps(expectedTimestamps);
-			auto actualTimestamps = Decompressor::DecompressTimeStamps(*stream.get());
+			auto stream = compressor::compress_timestamps(expected_timestamps);
+			auto actualTimestamps = decompressor::decompress_timestamps(*stream.get());
             
-            Assert::IsFalse(actualTimestamps.IsError());
-			CompareVectors(expectedTimestamps, *actualTimestamps.value.get());
+            Assert::IsFalse(actualTimestamps.is_error());
+			compare_vectors(expected_timestamps, *actualTimestamps.value.get());
 		}
         
         TEST_METHOD(IncreasingIntegerSequenceSimple)
         {
-            std::vector<uint64_t> expectedTimestamps;
-            expectedTimestamps.push_back(1);
-            expectedTimestamps.push_back(2);
-            expectedTimestamps.push_back(3);
-            expectedTimestamps.push_back((uint64_t)0xFFFFFFFF + 1);
-            expectedTimestamps.push_back((uint64_t)0xFFFFFFFF + 2);
-            expectedTimestamps.push_back((uint64_t)0xFFFFFFFF + 3);
+            std::vector<uint64_t> expected_timestamps;
+            expected_timestamps.push_back(1);
+            expected_timestamps.push_back(2);
+            expected_timestamps.push_back(3);
+            expected_timestamps.push_back((uint64_t)0xFFFFFFFF + 1);
+            expected_timestamps.push_back((uint64_t)0xFFFFFFFF + 2);
+            expected_timestamps.push_back((uint64_t)0xFFFFFFFF + 3);
 
-            auto stream = Compressor::CompressIntegerValues(expectedTimestamps);
-            auto actualTimestamps = Decompressor::DecompressIntegerValues(*stream.get());
+            auto stream = compressor::compress_integer_values(expected_timestamps);
+            auto actualTimestamps = decompressor::decompress_integer_values(*stream.get());
             
-            Assert::IsFalse(actualTimestamps.IsError());
-            CompareVectors(expectedTimestamps, *actualTimestamps.value.get());
+            Assert::IsFalse(actualTimestamps.is_error());
+            compare_vectors(expected_timestamps, *actualTimestamps.value.get());
         }
 
         TEST_METHOD(IncreasingTimestampSequence)
         {
-            std::vector<uint32_t> expectedTimestamps;
-            expectedTimestamps.push_back(1);
+            std::vector<uint32_t> expected_timestamps;
+            expected_timestamps.push_back(1);
             for (int i = 13; i >= 1; --i)
             {
-                expectedTimestamps.push_back(3600/i);
+                expected_timestamps.push_back(3600/i);
             }
 
-            auto stream = Compressor::CompressTimestamps(expectedTimestamps);
-            auto actualTimestamps = Decompressor::DecompressTimeStamps(*stream.get());
+            auto stream = compressor::compress_timestamps(expected_timestamps);
+            auto actualTimestamps = decompressor::decompress_timestamps(*stream.get());
             
-            Assert::IsFalse(actualTimestamps.IsError());
-            CompareVectors(expectedTimestamps, *actualTimestamps.value.get());
+            Assert::IsFalse(actualTimestamps.is_error());
+            compare_vectors(expected_timestamps, *actualTimestamps.value.get());
         }
 
         TEST_METHOD(IncreasingIntegerSequence)
         {
-            std::vector<uint64_t> expectedTimestamps;
-            expectedTimestamps.push_back(1);
+            std::vector<uint64_t> expected_timestamps;
+            expected_timestamps.push_back(1);
             for (int i = 2; i <= 64; ++i)
             {
-                expectedTimestamps.push_back((uint64_t)1 << i);
+                expected_timestamps.push_back((uint64_t)1 << i);
             }
 
-            auto stream = Compressor::CompressIntegerValues(expectedTimestamps);
-            auto actualTimestamps = Decompressor::DecompressIntegerValues(*stream.get());
+            auto stream = compressor::compress_integer_values(expected_timestamps);
+            auto actualTimestamps = decompressor::decompress_integer_values(*stream.get());
             
-            Assert::IsFalse(actualTimestamps.IsError());
-            CompareVectors(expectedTimestamps, *actualTimestamps.value.get());
+            Assert::IsFalse(actualTimestamps.is_error());
+            compare_vectors(expected_timestamps, *actualTimestamps.value.get());
         }
 
         TEST_METHOD(DecreasingTimestampSequenceSimple)
         {
-            std::vector<uint32_t> expectedTimestamps;
-            expectedTimestamps.push_back(3);
-            expectedTimestamps.push_back(2);
-            expectedTimestamps.push_back(1);
+            std::vector<uint32_t> expected_timestamps;
+            expected_timestamps.push_back(3);
+            expected_timestamps.push_back(2);
+            expected_timestamps.push_back(1);
 
-            auto stream = Compressor::CompressTimestamps(expectedTimestamps);
-            auto actualTimestamps = Decompressor::DecompressTimeStamps(*stream.get());
+            auto stream = compressor::compress_timestamps(expected_timestamps);
+            auto actualTimestamps = decompressor::decompress_timestamps(*stream.get());
             
-            Assert::IsFalse(actualTimestamps.IsError());
-            CompareVectors(expectedTimestamps, *actualTimestamps.value.get());
+            Assert::IsFalse(actualTimestamps.is_error());
+            compare_vectors(expected_timestamps, *actualTimestamps.value.get());
         }
 
         TEST_METHOD(DecreasingTimestampSequence)
         {
-            std::vector<uint32_t> expectedTimestamps;
+            std::vector<uint32_t> expected_timestamps;
             for (int i = 1; i <= 13; ++i)
             {
-                expectedTimestamps.push_back(3600 / i);
+                expected_timestamps.push_back(3600 / i);
             }
 
-            auto stream = Compressor::CompressTimestamps(expectedTimestamps);
-            auto actualTimestamps = Decompressor::DecompressTimeStamps(*stream.get());
+            auto stream = compressor::compress_timestamps(expected_timestamps);
+            auto actualTimestamps = decompressor::decompress_timestamps(*stream.get());
             
-            Assert::IsFalse(actualTimestamps.IsError());
-            CompareVectors(expectedTimestamps, *actualTimestamps.value.get());
+            Assert::IsFalse(actualTimestamps.is_error());
+            compare_vectors(expected_timestamps, *actualTimestamps.value.get());
         }
 
         TEST_METHOD(DecreasingIntegerSequence)
         {
-            std::vector<uint64_t> expectedTimestamps;
+            std::vector<uint64_t> expected_timestamps;
             for (int i = 63; i >= 0; --i)
             {
-                expectedTimestamps.push_back((uint64_t)1 << i);
+                expected_timestamps.push_back((uint64_t)1 << i);
             }
 
-            auto stream = Compressor::CompressIntegerValues(expectedTimestamps);
-            auto actualTimestamps = Decompressor::DecompressIntegerValues(*stream.get());
+            auto stream = compressor::compress_integer_values(expected_timestamps);
+            auto actualTimestamps = decompressor::decompress_integer_values(*stream.get());
             
-            Assert::IsFalse(actualTimestamps.IsError());
-            CompareVectors(expectedTimestamps, *actualTimestamps.value.get());
+            Assert::IsFalse(actualTimestamps.is_error());
+            compare_vectors(expected_timestamps, *actualTimestamps.value.get());
         }
 
         TEST_METHOD(MixedTimestampSequenceSimple)
         {
-            std::vector<uint32_t> expectedTimestamps;
-            expectedTimestamps.push_back(10);
-            expectedTimestamps.push_back(11);
-            expectedTimestamps.push_back(18);
-            expectedTimestamps.push_back(19);
-            expectedTimestamps.push_back(100);
+            std::vector<uint32_t> expected_timestamps;
+            expected_timestamps.push_back(10);
+            expected_timestamps.push_back(11);
+            expected_timestamps.push_back(18);
+            expected_timestamps.push_back(19);
+            expected_timestamps.push_back(100);
 
-            auto stream = Compressor::CompressTimestamps(expectedTimestamps);
-            auto actualTimestamps = Decompressor::DecompressTimeStamps(*stream.get());
+            auto stream = compressor::compress_timestamps(expected_timestamps);
+            auto actualTimestamps = decompressor::decompress_timestamps(*stream.get());
             
-            Assert::IsFalse(actualTimestamps.IsError());
-            CompareVectors(expectedTimestamps, *actualTimestamps.value.get());
+            Assert::IsFalse(actualTimestamps.is_error());
+            compare_vectors(expected_timestamps, *actualTimestamps.value.get());
         }
 
         TEST_METHOD(MixedTimestampSequenceRandom)
         {
-            std::vector<uint32_t> expectedTimestamps;
-            expectedTimestamps.push_back(52);
-            expectedTimestamps.push_back(22);
-            expectedTimestamps.push_back(21);
-            expectedTimestamps.push_back(116);
+            std::vector<uint32_t> expected_timestamps;
+            expected_timestamps.push_back(52);
+            expected_timestamps.push_back(22);
+            expected_timestamps.push_back(21);
+            expected_timestamps.push_back(116);
 
             for (int i = 0; i < 30; ++i)
             {
-                expectedTimestamps.push_back( rand() % 120 );
+                expected_timestamps.push_back( rand() % 120 );
             }
 
-            auto stream = Compressor::CompressTimestamps(expectedTimestamps);
-            auto actualTimestamps = Decompressor::DecompressTimeStamps(*stream.get());
+            auto stream = compressor::compress_timestamps(expected_timestamps);
+            auto actualTimestamps = decompressor::decompress_timestamps(*stream.get());
             
-            Assert::IsFalse(actualTimestamps.IsError());
-            CompareVectors(expectedTimestamps, *actualTimestamps.value.get());
+            Assert::IsFalse(actualTimestamps.is_error());
+            compare_vectors(expected_timestamps, *actualTimestamps.value.get());
         }
 
     private:
 		template <typename T>
-		void CompareVectors(const std::vector<T>& expectedValues, const std::vector<T>& actualValues)
+		void compare_vectors(const std::vector<T>& expectedValues, const std::vector<T>& actualValues)
 		{
 			Assert::AreEqual(expectedValues.size(), actualValues.size());
 			for (int i = 0; i < expectedValues.size(); ++i)
