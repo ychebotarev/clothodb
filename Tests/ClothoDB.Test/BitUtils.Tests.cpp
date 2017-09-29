@@ -3,12 +3,12 @@
 #include <functional>
 
 #include "CppUnitTest.h"
+
+#include "src/cdb_compressor/bit_utils.h"
+#include "src/cdb_compressor/bit_stream.h"
+
+using namespace cdb::compressor;
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
-
-#include "src/core/bit_utils.h"
-#include "src/core/bit_stream.h"
-
-using namespace clothodb::core;
 
 namespace ClothDBTest
 {		
@@ -280,7 +280,7 @@ namespace ClothDBTest
             Assert::AreEqual((uint8_t)0x80, buffer[8]);
         }
 
-        TEST_METHOD(WriteDeadBeef)
+        TEST_METHOD(write_dead_beef)
         {
             bit_stream stream(10);
             bit_stream_writer writer(stream);
@@ -300,7 +300,7 @@ namespace ClothDBTest
             Assert::AreEqual((uint8_t)0xEF, stream[3]);
         }
         
-        TEST_METHOD(ReadOneBit)
+        TEST_METHOD(read_one_bit)
         {
             bit_stream stream(10);
             bit_stream_writer writer(stream);
@@ -326,7 +326,7 @@ namespace ClothDBTest
             Assert::AreEqual(1, (int)result8);
         }
 
-        TEST_METHOD(ReadMultipleBits)
+        TEST_METHOD(read_multiple_bits)
         {
             bit_stream stream(10);
             bit_stream_writer writer(stream);
@@ -345,7 +345,7 @@ namespace ClothDBTest
             Assert::AreEqual(0b00101, (int)result3);
         }
         
-        TEST_METHOD(Read32BitsZero)
+        TEST_METHOD(read_32_bits_zero)
         {
             bit_stream stream(20);
             bit_stream_writer writer(stream);
@@ -361,7 +361,7 @@ namespace ClothDBTest
             Assert::AreEqual(0, (int)result);
         }
         
-        TEST_METHOD(Read64BitsZero)
+        TEST_METHOD(read_64_bits_zero)
         {
             bit_stream stream(20);
             bit_stream_writer writer(stream);

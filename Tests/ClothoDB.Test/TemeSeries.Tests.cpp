@@ -3,10 +3,12 @@
 #include <functional>
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
-#include "src/core/constants.h"
+#include "src/cdb_common/constants.h"
+#include "src/core/time_helpers.h"
 #include "src/core/time_series.h"
 
-using namespace clothodb::core;
+using namespace cdb;
+using namespace cdb::core;
 
 namespace ClothDBTest
 {
@@ -23,7 +25,7 @@ namespace ClothDBTest
                 timeSeries.add_value(point.value, point.timestamp);
             }
 
-            auto result = timeSeries.get_points(0, 0xffffffffffffffff);
+            auto result = timeSeries.get_points();
 
             auto actual_points = result.value.get();
             compare_vectors(expected_points, *actual_points);
@@ -34,7 +36,7 @@ namespace ClothDBTest
             auto properties = CreateProperties();
             time_series timeSeries(properties);
 
-            auto result = timeSeries.get_points(0, 0xffffffffffffffff);
+            auto result = timeSeries.get_points();
 
             auto actual_points = result.value.get();
             Assert::IsTrue(actual_points->size() == 0);
@@ -49,7 +51,7 @@ namespace ClothDBTest
             {
                 timeSeries.add_value(point.value, point.timestamp);
             }
-            auto result = timeSeries.get_points(0, 0xffffffffffffffff);
+            auto result = timeSeries.get_points();
 
             auto actual_points = result.value.get();
             compare_vectors(expected_points, *actual_points);
@@ -65,7 +67,7 @@ namespace ClothDBTest
             {
                 timeSeries.add_value(point.value, point.timestamp);
             }
-            auto result = timeSeries.get_points(0, 0xffffffffffffffff);
+            auto result = timeSeries.get_points();
 
             auto actual_points = result.value.get();
             compare_vectors(expected_points, *actual_points);
@@ -77,13 +79,13 @@ namespace ClothDBTest
             properties->m_type = ts_type::TypeDouble;
             properties->m_store_milliseconds = true;
             time_series timeSeries(properties);
-            std::vector<ts_point> expected_points{ { 0, 1000 } };
+            std::vector<ts_point> expected_points{ { 0, 1001 } };
             for (auto &point : expected_points)
             {
                 timeSeries.add_value(point.value, point.timestamp);
             }
 
-            auto result = timeSeries.get_points(0, 0xffffffffffffffff);
+            auto result = timeSeries.get_points();
 
             auto actual_points = result.value.get();
             compare_vectors(expected_points, *actual_points);
@@ -100,7 +102,7 @@ namespace ClothDBTest
                 timeSeries.add_value(point.value, point.timestamp);
             }
             
-            auto result = timeSeries.get_points(0, 0xffffffffffffffff);
+            auto result = timeSeries.get_points();
 
             auto actual_points = result.value.get();
             compare_vectors(expected_points, *actual_points);
@@ -128,7 +130,7 @@ namespace ClothDBTest
             }
 
             Assert::AreEqual(2, (int)timeSeries.stored_hours());
-            auto result = timeSeries.get_points(0, 0xffffffffffffffff);
+            auto result = timeSeries.get_points();
 
             auto actual_points = result.value.get();
             compare_vectors(expected_points, *actual_points);
@@ -155,7 +157,7 @@ namespace ClothDBTest
             }
             auto storedHours = timeSeries.stored_hours();
             Assert::AreEqual(Constants::kMaxBuckets, storedHours);
-            auto result = timeSeries.get_points(0, 0xffffffffffffffff);
+            auto result = timeSeries.get_points();
             
             auto actual_points = result.value.get();
             compare_vectors(expected_points, *actual_points);
@@ -168,14 +170,9 @@ namespace ClothDBTest
             time_series timeSeries(properties);
             uint64_t startTime = 1000;
 
-            uint64_t oldTime = 0;
             std::vector<ts_point> expected_points;
             for (int hour = 0; hour <= Constants::kMaxBuckets; ++hour)
             {
-                if (hour < 3)
-                {
-                    oldTime = hour * Constants::kOneHourInMs;
-                }
                 for (int minute = 0; minute < 60; ++minute)
                 {
                     uint64_t totalMintes = hour * 60 + minute;
@@ -185,21 +182,52 @@ namespace ClothDBTest
                         expected_points.push_back({ totalMintes, timestamp });
                 }
             }
-            oldTime += 60 * 1000;
+            auto oldTime = 3 * Constants::kOneHourInMs;
             timeSeries.remove_old_data(oldTime);
             auto storedHours = timeSeries.stored_hours();
             Assert::AreEqual(Constants::kMaxBuckets - 2, storedHours);
-            auto result = timeSeries.get_points(0, 0xffffffffffffffff);
-
+            
+            auto result = timeSeries.get_points();
             auto actual_points = result.value.get();
             compare_vectors(expected_points, *actual_points);
         }        
+
+        TEST_METHOD(time_series_tests_resolution)
+        {
+            time_series_tests_scale(ts_scale::one_sec);
+            time_series_tests_scale(ts_scale::one_min);
+            time_series_tests_scale(ts_scale::five_sec);
+            time_series_tests_scale(ts_scale::five_min);
+        }
+
+        void time_series_tests_scale(ts_scale scale)
+        {
+            auto properties = CreateProperties();
+            properties->m_scale = scale;
+            time_series timeSeries(properties);
+            auto scale_in_ms = time_helpers::scale_in_ms(properties->m_scale);
+            std::vector<ts_point> expected_points{ { 0, 2 * scale_in_ms } };
+            for (auto &point : expected_points)
+            {
+                timeSeries.add_value(point.value, point.timestamp + 10);
+            }
+            bool success = timeSeries.add_value(4, 2 * scale_in_ms - 1);
+            Assert::IsFalse(success);
+            
+            success = timeSeries.add_value(4, 2 * scale_in_ms + 1);
+            Assert::IsFalse(success);
+
+            auto result = timeSeries.get_points();
+
+            auto actual_points = result.value.get();
+            compare_vectors(expected_points, *actual_points);
+        }
 
     private:
         std::shared_ptr<ts_properties> CreateProperties()
         {
             auto properties = std::make_shared<ts_properties>();
-            properties->m_name = "test";
+            properties->m_metric = "test";
             return properties;
         }
 

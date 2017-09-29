@@ -5,9 +5,7 @@
 #include "CppUnitTest.h"
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
-#include "src/Common/circular_buffer.h"
-
-using namespace clothodb::common;
+#include "src/cdb_common/circular_buffer.h"
 
 namespace ClothDBTest
 {
@@ -16,7 +14,7 @@ namespace ClothDBTest
     public:
         TEST_METHOD(circular_buffer_size_test)
         {
-            circular_buffer<int> buffer(10, GetterImpl, ResetImpl);
+            cdb::circular_buffer<int> buffer(10, GetterImpl, ResetImpl);
             buffer.set_head_index(0);
             buffer.set_tail_index(0);
             Assert::AreEqual(1, (int)buffer.size());
@@ -44,12 +42,16 @@ namespace ClothDBTest
             buffer.set_head_index(0);
             buffer.set_tail_index(5);
             Assert::AreEqual(6, (int)buffer.size());
+            
+            buffer.set_head_index(0);
+            buffer.set_tail_index(2);
+            Assert::AreEqual(9, (int)buffer.size());
         }
 
-        TEST_METHOD(circular_bufferPushHeadTest)
+        TEST_METHOD(circular_buffer_push_head_test)
         {
             circular_buffer_tests::sValue = 0;
-            circular_buffer<int> buffer(10, GetterImpl, ResetImpl);
+            cdb::circular_buffer<int> buffer(10, GetterImpl, ResetImpl);
             buffer.move_head_forward();
             Assert::AreEqual(1, (int)buffer.size());
             for (int i = 1; i < 10; ++i)
@@ -65,10 +67,10 @@ namespace ClothDBTest
             }
         }
 
-        TEST_METHOD(circular_bufferPushTailTest)
+        TEST_METHOD(circular_buffer_push_tail_test)
         {
             circular_buffer_tests::sValue = 0;
-            circular_buffer<int> buffer(10, GetterImpl, ResetImpl);
+            cdb::circular_buffer<int> buffer(10, GetterImpl, ResetImpl);
             
             check_exception([&buffer]() { buffer.move_tail_forward(); }, true);
             check_exception([&buffer]() 
@@ -78,11 +80,11 @@ namespace ClothDBTest
             }, false);
         }
 
-        TEST_METHOD(circular_bufferAtTest)
+        TEST_METHOD(circular_buffer_get_test)
         {
             circular_buffer_tests::sValue = 0;
-            circular_buffer<int>::item_resetter<int> resetter = [](int&) {};
-            circular_buffer<int> buffer(10, GetterImpl, resetter);
+            cdb::circular_buffer<int>::item_resetter<int> resetter = [](int&) {};
+            cdb::circular_buffer<int> buffer(10, GetterImpl, resetter);
             for (int i = 0; i < 10; ++i)
             {
                 circular_buffer_tests::sValue = i;

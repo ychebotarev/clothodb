@@ -2,8 +2,8 @@
 
 #include <cstdint>
 
-namespace clothodb {
-namespace core {
+namespace cdb{
+namespace core{
 
 struct ts_point
 {

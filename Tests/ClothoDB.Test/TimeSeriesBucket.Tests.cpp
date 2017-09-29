@@ -8,17 +8,18 @@
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 #include "src/core/ts_bucket.h"
+#include "src/core/time_helpers.h"
 
-using namespace clothodb::core;
+using namespace cdb::core;
 
 namespace ClothDBTest
 {
     using ts_points = std::vector<ts_point>;
 
-    TEST_CLASS(TimeSeriesBucketTests)
+    TEST_CLASS(time_series_bucket_tests)
     {
     public:
-        TEST_METHOD(TimeSeriesBucketTestsSimple)
+        TEST_METHOD(time_series_bucket_tests_simple)
         {
             auto properties = get_properties();
             ts_bucket bucket(properties);
@@ -26,14 +27,14 @@ namespace ClothDBTest
             ts_points expected_points{ {1, 1000}, {2, 2000} };
             for (auto &point : expected_points)
             {
-                bucket.add_value(point.value, point.timestamp);
+                bucket.add_value(point.value, (uint32_t) point.timestamp / 1000, 0);
             }
             bucket.decompress(actual_points, 0,0, std::numeric_limits<uint32_t>::max());
             
             compare_vectors(expected_points, actual_points);
         }
 
-        TEST_METHOD(TimeSeriesBucketTestsEmpty)
+        TEST_METHOD(time_series_bucket_tests_empty)
         {
             auto properties = get_properties();
             ts_bucket bucket(properties);
@@ -43,7 +44,7 @@ namespace ClothDBTest
             Assert::IsTrue(actual_points.size() == 0);
         }
 
-        TEST_METHOD(TimeSeriesBucketTestsSingleInteger)
+        TEST_METHOD(time_series_bucket_tests_single_integer)
         {
             auto properties = get_properties();
             ts_bucket bucket(properties);
@@ -51,14 +52,14 @@ namespace ClothDBTest
             ts_points expected_points{ { 1,1000 }};
             for (auto &point : expected_points)
             {
-                bucket.add_value(point.value, point.timestamp);
+                bucket.add_value(point.value, (uint32_t)point.timestamp / 1000, 0);
             }
             bucket.decompress(actual_points, 0, 0, std::numeric_limits<uint32_t>::max());
 
             compare_vectors(expected_points, actual_points);
         }
 
-        TEST_METHOD(TimeSeriesBucketTestsMilliseconds)
+        TEST_METHOD(time_series_bucket_tests_precise_time)
         {
             auto properties = get_properties();
             properties.m_store_milliseconds = true;
@@ -67,14 +68,14 @@ namespace ClothDBTest
             ts_points expected_points{ { 1,1001 },{ 2,2002 } };
             for (auto &point : expected_points)
             {
-                bucket.add_value(point.value, point.timestamp);
+                bucket.add_value(point.value, (uint32_t)point.timestamp / 1000, point.timestamp % 1000);
             }
             bucket.decompress(actual_points, 0, 0, std::numeric_limits<uint32_t>::max());
 
             compare_vectors(expected_points, actual_points);
         }
 
-        TEST_METHOD(TimeSeriesBucketTestsSingleDouble)
+        TEST_METHOD(time_series_bucket_tests_single_double)
         {
             auto properties = get_properties();
             properties.m_store_milliseconds = true;
@@ -84,7 +85,7 @@ namespace ClothDBTest
             ts_points expected_points{ { DoubleToUint64(1.1), 1001 }};
             for (auto &point : expected_points)
             {
-                bucket.add_value(point.value, point.timestamp);
+                bucket.add_value(point.value, (uint32_t)point.timestamp / 1000, point.timestamp % 1000);
             }
 
             bucket.decompress(actual_points, 0, 0, std::numeric_limits<uint32_t>::max());
@@ -92,7 +93,7 @@ namespace ClothDBTest
             compare_vectors(expected_points, actual_points);
         }
 
-        TEST_METHOD(TimeSeriesBucketTestsDouble)
+        TEST_METHOD(time_series_bucket_tests_double)
         {
             auto properties = get_properties();
             properties.m_store_milliseconds = true;
@@ -107,7 +108,7 @@ namespace ClothDBTest
             };
             for (auto &point : expected_points)
             {
-                bucket.add_value(point.value, point.timestamp);
+                bucket.add_value(point.value, (uint32_t)point.timestamp / 1000, point.timestamp % 1000);
             }
 
             bucket.decompress(actual_points, 0, 0, std::numeric_limits<uint32_t>::max());
@@ -119,7 +120,7 @@ namespace ClothDBTest
         ts_properties get_properties()
         {
             ts_properties properties;
-            properties.m_name = "test";
+            properties.m_metric = "test";
             return properties;
         }
 

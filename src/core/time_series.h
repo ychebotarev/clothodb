@@ -1,13 +1,13 @@
 #pragma once
-#include "src/common/slimrwlock.h"
+#include "src/cdb_common/srwlock.h"
 
-#include "src/core/common.h"
+#include "src/cdb_common/common.h"
 
 #include "src/core/ts_properties.h"
 #include "src/core/ts_bucket.h"
 
-namespace clothodb {
-namespace core {
+namespace cdb{
+namespace core{
 
 using ts_points = vector_or_error<ts_point>;
 using ts_bucket_ptr = std::unique_ptr<ts_bucket>;
@@ -20,19 +20,23 @@ public:
     ~time_series();
 
     bool add_value(uint64_t value, uint64_t timestamp);
+    
+    ts_points get_points();
     ts_points get_points(uint64_t start_time, uint64_t end_time);
+
     void remove_old_data(uint64_t start_time);
     bool is_empty() const { return m_empty; };
     size_t stored_hours() const { return active_buckets_count(); }
+
+    ts_properties_ptr get_properties() { return m_properties; }
+protected:
+    size_t active_buckets_count() const;
 private:
     ts_bucket_ptr create_bucket();
     
-    uint64_t floor_to_hour(uint64_t timestamp);
-
     //circullar buffer related functions
     void normalize_index(size_t& index) const;
 
-    size_t active_buckets_count() const;
 
     void set_head_index(size_t index);
     void set_tail_index(size_t index);
@@ -54,8 +58,8 @@ private:
 
     ts_properties_ptr m_properties;
 
-    uint64_t m_start_hour_ms;
-    uint64_t m_last_timestamp;
+    uint64_t m_head_start_ms;
+    uint64_t m_last_timestamp_scaled;
 
     RTL_SRWLOCK m_srw_lock;
 };

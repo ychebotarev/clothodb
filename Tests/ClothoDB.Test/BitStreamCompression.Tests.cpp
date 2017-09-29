@@ -4,18 +4,61 @@
 #include "CppUnitTest.h"
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
-#include "src/core/bit_utils.h"
-#include "src/core/bit_stream.h"
-#include "src/core/compressor/compressor.h"
-#include "src/core/compressor/decompressor.h"
+#include "src/cdb_compressor/bit_utils.h"
+#include "src/cdb_compressor/bit_stream.h"
+#include "src/cdb_compressor/compressor.h"
+#include "src/cdb_compressor/decompressor.h"
 
-using namespace clothodb::core;
+using namespace cdb::compressor;
 
 namespace ClothDBTest
 {		
 	TEST_CLASS(CompressionTests)
 	{
 	public:
+        TEST_METHOD(compression_timestamp_test_delta_of_delta)
+        {
+            bit_stream stream;
+            bit_stream_writer writer(stream);
+            bit_stream_reader reader(stream);
+
+            timestamp_compressor compressor(writer);
+            timestamp_decompressor decompressor(reader);
+
+            test_timestamp_delta_of_delta(writer, compressor, decompressor, 0);
+            test_timestamp_delta_of_delta(writer, compressor, decompressor, 1);
+
+            int expected = 1;
+            for (int i = 0; i < 11; ++i)
+            {
+                expected <<= 1;
+                test_timestamp_delta_of_delta(writer, compressor, decompressor, expected);
+                expected += 1;
+                test_timestamp_delta_of_delta(writer, compressor, decompressor, expected);
+            }
+        }
+        
+        TEST_METHOD(compression_integer_test_delta_of_delta)
+        {
+            bit_stream stream;
+            bit_stream_writer writer(stream);
+            bit_stream_reader reader(stream);
+
+            integer_compressor compressor(writer);
+            integer_decompressor decompressor(reader);
+
+            test_integer_delta_of_delta(writer, compressor, decompressor, 0);
+            test_integer_delta_of_delta(writer, compressor, decompressor, 1);
+
+            int expected = 1;
+            for (int i = 0; i < 20; ++i)
+            {
+                expected <<= 1;
+                test_integer_delta_of_delta(writer, compressor, decompressor, expected);
+                expected += 1;
+                test_integer_delta_of_delta(writer, compressor, decompressor, expected);
+            }
+        }
         TEST_METHOD(SingleTimestamp)
         {
 			std::vector<uint32_t> expected_timestamps;
@@ -284,7 +327,32 @@ namespace ClothDBTest
         }
 
     private:
-		template <typename T>
+
+        void test_timestamp_delta_of_delta(
+            bit_stream_writer& writer,
+            timestamp_compressor& compressor,
+            timestamp_decompressor& decompressor,
+            int expected)
+        {
+            compressor.store_delta_of_delta(expected);
+            writer.commit();
+            int64_t actual = decompressor.read_delta_of_delta();
+            Assert::AreEqual((int)actual, (int)expected);
+        }
+
+        void test_integer_delta_of_delta(
+            bit_stream_writer& writer,
+            integer_compressor& compressor,
+            integer_decompressor& decompressor,
+            int expected)
+        {
+            compressor.store_delta_of_delta(expected);
+            writer.commit();
+            int64_t actual = decompressor.read_delta_of_delta();
+            Assert::AreEqual((int)actual, (int)expected);
+        }
+        
+        template <typename T>
 		void compare_vectors(const std::vector<T>& expectedValues, const std::vector<T>& actualValues)
 		{
 			Assert::AreEqual(expectedValues.size(), actualValues.size());

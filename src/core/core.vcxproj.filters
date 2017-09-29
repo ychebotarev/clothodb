@@ -9,78 +9,57 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
-    <Filter Include="TimeSeries">
-      <UniqueIdentifier>{e1f6161b-a396-4313-ab79-715cb150506b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Compressor">
-      <UniqueIdentifier>{c72c9f97-34d6-43ba-82fb-2e6a207c346f}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Compressor\Decompressor.h">
-      <Filter>Compressor</Filter>
-    </ClInclude>
-    <ClInclude Include="Compressor\Compressor.h">
-      <Filter>Compressor</Filter>
-    </ClInclude>
-    <ClInclude Include="Constants.h">
+    <ClInclude Include="time_helpers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ErrorCodes.h">
+    <ClInclude Include="ts_scale.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="common.h">
+    <ClInclude Include="tags_parser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="bit_utils.h">
+    <ClInclude Include="time_series.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="bit_stream.h">
+    <ClInclude Include="ts_bucket.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ts_catalog.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ts_lookup.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ts_point.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ts_properties.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ts_type.h">
-      <Filter>TimeSeries</Filter>
-    </ClInclude>
-    <ClInclude Include="ts_point.h">
-      <Filter>TimeSeries</Filter>
-    </ClInclude>
-    <ClInclude Include="ts_properties.h">
-      <Filter>TimeSeries</Filter>
-    </ClInclude>
-    <ClInclude Include="ts_catalog.h">
-      <Filter>TimeSeries</Filter>
-    </ClInclude>
-    <ClInclude Include="ts_bucket.h">
-      <Filter>TimeSeries</Filter>
-    </ClInclude>
-    <ClInclude Include="time_series.h">
-      <Filter>TimeSeries</Filter>
-    </ClInclude>
-    <ClInclude Include="ts_resolution.h">
-      <Filter>TimeSeries</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Compressor\Compressor.cpp">
-      <Filter>Compressor</Filter>
-    </ClCompile>
-    <ClCompile Include="Compressor\Decompressor.cpp">
-      <Filter>Compressor</Filter>
-    </ClCompile>
-    <ClCompile Include="bit_utils.cpp">
+    <ClCompile Include="time_helpers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="bit_stream.cpp">
+    <ClCompile Include="tags_parser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="time_series.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ts_bucket.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ts_catalog.cpp">
-      <Filter>TimeSeries</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ts_bucket.cpp">
-      <Filter>TimeSeries</Filter>
-    </ClCompile>
-    <ClCompile Include="time_series.cpp">
-      <Filter>TimeSeries</Filter>
+    <ClCompile Include="ts_lookup.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

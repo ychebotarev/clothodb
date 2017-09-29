@@ -166,10 +166,19 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="string_buffer.Tests.cpp" />
+    <ClCompile Include="ts_lookup.Tests.cpp" />
+    <ClCompile Include="ts_properties.Tests.cpp" />
     <ClCompile Include="TemeSeries.Tests.cpp" />
     <ClCompile Include="TimeSeriesBucket.Tests.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\src\cdb_Common\Common.vcxproj">
+      <Project>{dff80ca8-18e1-4bdb-a107-7dba520740f0}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\cdb_compressor\cdb_compressor.vcxproj">
+      <Project>{9ffe9725-7e77-48bd-851a-9a9e23e9a04f}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\src\core\core.vcxproj">
       <Project>{2778b793-150e-4b50-a407-a693b6d60b43}</Project>
     </ProjectReference>

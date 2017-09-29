@@ -2,16 +2,33 @@
 
 #include <functional>
 
-#include "src/core/Constants.h"
-#include "src/core/ErrorCodes.h"
+#include "src/cdb_common/constants.h"
+#include "src/cdb_common/error_codes.h"
 
-namespace clothodb {
-namespace core {
+#include "src/core/time_helpers.h"
+
+namespace cdb{
+namespace core{
+
+using namespace std;
+using namespace cdb;
+
+uint32_t get_hours_per_bucket(ts_scale scale)
+{
+    return Constants::kBucketSize 
+        * time_helpers::scale_in_ms(scale)
+        / Constants::kOneHourInMs;
+}
+
+uint32_t get_milliseconds_in_bucket(ts_scale scale)
+{
+    return Constants::kBucketSize * time_helpers::scale_in_ms(scale);
+}
 
 time_series::time_series(ts_properties_ptr properties)
     :m_properties(properties),
-    m_start_hour_ms(0),
-    m_last_timestamp(0)
+    m_head_start_ms(0),
+    m_last_timestamp_scaled(0)
 {
     ::InitializeSRWLock(&m_srw_lock);
 }
@@ -21,66 +38,85 @@ time_series::~time_series()
 
 ts_bucket_ptr time_series::create_bucket()
 {
-    std::unique_ptr<ts_bucket> bucket(new ts_bucket(*m_properties.get()));
+    unique_ptr<ts_bucket> bucket(new ts_bucket(*m_properties.get()));
     return bucket;
 }
 
 bool time_series::add_value(uint64_t value, uint64_t timestamp)
 {
-    auto timestamp_sec = timestamp / 1000;
-    if (timestamp_sec <= m_last_timestamp)
+    auto timestamp_scaled = time_helpers::scale_timestamp(
+        timestamp, 
+        m_properties->m_scale);
+
+    if (!is_empty() && timestamp_scaled <= m_last_timestamp_scaled)
     {
         return false;
     }
 
     SRWLockExclusive lock(m_srw_lock);
-    m_last_timestamp = timestamp_sec;
+    m_last_timestamp_scaled = timestamp_scaled;
 
     if (is_empty())
     {
         move_head_forward();
-        m_start_hour_ms = floor_to_hour(timestamp);
+        m_head_start_ms = time_helpers::floor_to_hour(timestamp);
     }
 
-    auto stored_hours = active_buckets_count();
-
-    uint64_t tail_bucket_start = (m_start_hour_ms) + (stored_hours - 1) * Constants::kOneHourInMs;
-    if (timestamp > tail_bucket_start + Constants::kOneHourInMs)
+    auto hours_per_bucket = get_hours_per_bucket(m_properties->m_scale);
+    auto scale_in_ms = time_helpers::scale_in_ms(m_properties->m_scale);
+    auto bucket_in_ms = hours_per_bucket * Constants::kOneHourInMs;
+    
+    uint64_t tail_bucket_start_ms = m_head_start_ms 
+        + (active_buckets_count() - 1) * hours_per_bucket * Constants::kOneHourInMs;
+    uint64_t tail_bucket_end_ms = tail_bucket_start_ms + hours_per_bucket * Constants::kOneHourInMs;
+    
+    if (timestamp_scaled * scale_in_ms > tail_bucket_end_ms)
     {
         move_head_forward();
-        tail_bucket_start += Constants::kOneHourInMs;
+        tail_bucket_start_ms += bucket_in_ms;
     }
 
-    timestamp -= tail_bucket_start;
-    head().add_value(value, (uint32_t)timestamp);
+    timestamp_scaled -= time_helpers::scale_timestamp(
+        tail_bucket_start_ms,
+        m_properties->m_scale);
+
+    head().add_value(value, (uint32_t)timestamp_scaled, timestamp % Constants::kMillisecondsInSec);
     return true;
+}
+
+ts_points time_series::get_points()
+{
+    return get_points(0, 0xffffffffffffffff);
 }
 
 ts_points time_series::get_points(uint64_t start_time, uint64_t end_time)
 {
-    auto result = std::make_shared<std::vector<ts_point>>();
+    auto result = make_shared<vector<ts_point>>();
     if (is_empty()) return ts_points::from_value(result);
+    //result->reserve(20000);
     try
     {
         int index = 0;
         auto buckets = active_buckets_count();
+        auto bucket_length_ms = get_hours_per_bucket(m_properties->m_scale) * Constants::kOneHourInMs;
 
-        uint64_t start_hour_ms = m_start_hour_ms;
-        uint64_t endHourInMs = start_hour_ms + Constants::kOneHourInMs;
+        uint64_t bucket_start_ms = m_head_start_ms;
+        uint64_t bucket_end_ms = bucket_start_ms + bucket_length_ms;
         
         do {
-            if (endHourInMs < start_time || start_hour_ms >=end_time) break;
+            if (bucket_end_ms < start_time || bucket_end_ms > end_time) break;
 
             auto& bucket = at(index);
             SRWLockConditional lock(bucket.is_sealed(), m_srw_lock);
-            bucket.decompress(*result.get(), start_hour_ms, start_time, end_time);
-            start_hour_ms += Constants::kOneHourInMs;
-            endHourInMs += Constants::kOneHourInMs;
+            bucket.decompress(*result.get(), bucket_start_ms, start_time, end_time);
+            
+            bucket_start_ms += bucket_length_ms;
+            bucket_end_ms += bucket_length_ms;
         } while (++index != buckets);
     
         return ts_points::from_value(result);
     }
-    catch (const std::overflow_error&)
+    catch (const overflow_error&)
     {
         return ts_points::from_error(ErrorCodes::kBitStreamOverflaw);
     }
@@ -92,20 +128,15 @@ ts_points time_series::get_points(uint64_t start_time, uint64_t end_time)
 
 void time_series::remove_old_data(uint64_t startTime)
 {
-    uint64_t startHourInMs = floor_to_hour(startTime);
+    uint64_t startHourInMs = time_helpers::floor_to_hour(startTime);
 
-    if (startHourInMs <= m_start_hour_ms) return;
+    if (startHourInMs <= m_head_start_ms) return;
 
     SRWLockExclusive lock(m_srw_lock);
-    while (m_start_hour_ms < startHourInMs && !is_empty())
+    while (m_head_start_ms < startHourInMs && !is_empty())
     {
         move_tail_forward();
     }
-}
-
-uint64_t time_series::floor_to_hour(uint64_t timestamp)
-{
-    return (timestamp / Constants::kOneHourInSeconds) * Constants::kOneHourInSeconds;
 }
 
 //Buffere related funcions
@@ -146,7 +177,7 @@ ts_bucket& time_series::at(size_t pos)
 {
     if (pos >= active_buckets_count())
     {
-        throw std::out_of_range("index our of range");
+        throw out_of_range("index our of range");
     }
     auto index = (m_tail_index + pos) % Constants::kMaxBuckets;
     return *m_buckets[index];
@@ -156,7 +187,7 @@ ts_bucket& time_series::head()
 {
     if (is_empty())
     {
-        throw std::out_of_range("buffer is empty");
+        throw out_of_range("buffer is empty");
     }
     return *m_buckets[m_head_index];
 }
@@ -165,7 +196,7 @@ ts_bucket& time_series::tail()
 {
     if (is_empty())
     {
-        throw std::out_of_range("buffer is empty");
+        throw out_of_range("buffer is empty");
     }
     return *m_buckets[m_tail_index];
 }
@@ -197,7 +228,7 @@ void time_series::move_head_forward()
         if (m_head_index == m_tail_index)
         {
             move_index_forward(m_tail_index);
-            m_start_hour_ms += Constants::kOneHourInMs;
+            m_head_start_ms += get_milliseconds_in_bucket(m_properties->m_scale);
         }
     }
 }
@@ -206,7 +237,7 @@ void time_series::move_tail_forward()
 {
     if (is_empty())
     {
-        throw std::out_of_range("buffer is empty");
+        throw out_of_range("buffer is empty");
     }
 
     tail().reset();
@@ -215,7 +246,7 @@ void time_series::move_tail_forward()
         m_empty = true;
     }
     move_index_forward(m_tail_index);
-    m_start_hour_ms += Constants::kOneHourInMs;
+    m_head_start_ms += get_milliseconds_in_bucket(m_properties->m_scale);
 }
 
 }}

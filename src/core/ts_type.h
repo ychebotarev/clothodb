@@ -1,7 +1,7 @@
 #pragma once
 
-namespace clothodb {
-namespace core {
+namespace cdb{
+namespace core{
 
 enum ts_type{
     TypeDouble,
