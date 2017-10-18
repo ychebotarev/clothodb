@@ -6,7 +6,7 @@
 #include <boost/algorithm/string/classification.hpp>
 
 using namespace std;
-using namespace cdb::core;
+using namespace cdb::ts;
 
 using vector_of_strings = shared_ptr<vector<string>>;
 using split_vector_type = vector<string>;
@@ -29,7 +29,7 @@ void LoadTimeSeriesBenchmarkFixture::SetUp()
 
     m_properties = make_shared<ts_properties>();
     m_properties->m_metric = "elb_request_count_8c0756";
-    m_properties->m_scale = ts_scale::five_min;
+    m_properties->m_resolution = ts_resolution::five_min;
     m_expected_points.clear();
 
     auto lines = get_all_lines("..\\benchmark\\data\\realAWSCloudwatch\\elb_request_count_8c0756.csv");

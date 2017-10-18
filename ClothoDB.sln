@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Core", "src\core\core.vcxproj", "{2778B793-150E-4B50-A407-A693B6D60B43}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cdb_timeseries", "src\cdb_timeseries\cdb_timeseries.vcxproj", "{2778B793-150E-4B50-A407-A693B6D60B43}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TimeSeries.Test", "Tests\ClothoDB.Test\ClothoDB.Test.vcxproj", "{FBCEE4AC-DBFD-4996-8644-71DC4A48F986}"
 EndProject
@@ -18,6 +18,12 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cdb_compressor", "src\cdb_compressor\cdb_compressor.vcxproj", "{9FFE9725-7E77-48BD-851A-9A9E23E9A04F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{A8D3D1C3-E5CD-4A67-996D-A48A1DDA6689}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cdb_storage", "src\cdb_storage\cdb_storage.vcxproj", "{765C84DB-B263-45FE-A5CB-7F6FD9728774}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cdb_server", "src\cdb_server\cdb_server.vcxproj", "{3F81860B-4581-402A-99D8-361F6C30C1BB}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cdb_database", "src\cdb_database\cdb_database.vcxproj", "{3B5D754B-7664-4836-A7E2-8E4672C2271A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -75,6 +81,30 @@ Global
 		{9FFE9725-7E77-48BD-851A-9A9E23E9A04F}.Release|x64.Build.0 = Release|x64
 		{9FFE9725-7E77-48BD-851A-9A9E23E9A04F}.Release|x86.ActiveCfg = Release|Win32
 		{9FFE9725-7E77-48BD-851A-9A9E23E9A04F}.Release|x86.Build.0 = Release|Win32
+		{765C84DB-B263-45FE-A5CB-7F6FD9728774}.Debug|x64.ActiveCfg = Debug|x64
+		{765C84DB-B263-45FE-A5CB-7F6FD9728774}.Debug|x64.Build.0 = Debug|x64
+		{765C84DB-B263-45FE-A5CB-7F6FD9728774}.Debug|x86.ActiveCfg = Debug|Win32
+		{765C84DB-B263-45FE-A5CB-7F6FD9728774}.Debug|x86.Build.0 = Debug|Win32
+		{765C84DB-B263-45FE-A5CB-7F6FD9728774}.Release|x64.ActiveCfg = Release|x64
+		{765C84DB-B263-45FE-A5CB-7F6FD9728774}.Release|x64.Build.0 = Release|x64
+		{765C84DB-B263-45FE-A5CB-7F6FD9728774}.Release|x86.ActiveCfg = Release|Win32
+		{765C84DB-B263-45FE-A5CB-7F6FD9728774}.Release|x86.Build.0 = Release|Win32
+		{3F81860B-4581-402A-99D8-361F6C30C1BB}.Debug|x64.ActiveCfg = Debug|x64
+		{3F81860B-4581-402A-99D8-361F6C30C1BB}.Debug|x64.Build.0 = Debug|x64
+		{3F81860B-4581-402A-99D8-361F6C30C1BB}.Debug|x86.ActiveCfg = Debug|Win32
+		{3F81860B-4581-402A-99D8-361F6C30C1BB}.Debug|x86.Build.0 = Debug|Win32
+		{3F81860B-4581-402A-99D8-361F6C30C1BB}.Release|x64.ActiveCfg = Release|x64
+		{3F81860B-4581-402A-99D8-361F6C30C1BB}.Release|x64.Build.0 = Release|x64
+		{3F81860B-4581-402A-99D8-361F6C30C1BB}.Release|x86.ActiveCfg = Release|Win32
+		{3F81860B-4581-402A-99D8-361F6C30C1BB}.Release|x86.Build.0 = Release|Win32
+		{3B5D754B-7664-4836-A7E2-8E4672C2271A}.Debug|x64.ActiveCfg = Debug|x64
+		{3B5D754B-7664-4836-A7E2-8E4672C2271A}.Debug|x64.Build.0 = Debug|x64
+		{3B5D754B-7664-4836-A7E2-8E4672C2271A}.Debug|x86.ActiveCfg = Debug|Win32
+		{3B5D754B-7664-4836-A7E2-8E4672C2271A}.Debug|x86.Build.0 = Debug|Win32
+		{3B5D754B-7664-4836-A7E2-8E4672C2271A}.Release|x64.ActiveCfg = Release|x64
+		{3B5D754B-7664-4836-A7E2-8E4672C2271A}.Release|x64.Build.0 = Release|x64
+		{3B5D754B-7664-4836-A7E2-8E4672C2271A}.Release|x86.ActiveCfg = Release|Win32
+		{3B5D754B-7664-4836-A7E2-8E4672C2271A}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

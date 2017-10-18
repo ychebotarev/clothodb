@@ -18,6 +18,10 @@ public:
     static constexpr uint32_t kTimeSeriesNotFound = 9;
     static constexpr uint32_t kHashCollision = 10;
     static constexpr uint32_t kLookupCollision = 11;
+    static constexpr uint32_t kNamespaceAlreadyExist = 12;
+    static constexpr uint32_t kNamespaceNotExist = 13;
+    static constexpr uint32_t kInvalidArguments = 14;
+    static constexpr uint32_t kLookupMetricNotFound = 15;
 };
 
 }

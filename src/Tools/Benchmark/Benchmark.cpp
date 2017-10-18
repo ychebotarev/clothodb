@@ -7,7 +7,7 @@
 
 #undef min
 #undef max
-#include "src\3rdparty\hayai\src\hayai.hpp"
+#include "src/3rdparty/hayai/src/hayai.hpp"
 
 int main()
 {

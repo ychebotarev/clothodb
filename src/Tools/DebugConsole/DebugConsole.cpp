@@ -12,8 +12,8 @@
 #include <time.h>
 
 #include "src/cdb_common/time_fmt.h"
-#include "src/core/time_helpers.h"
-#include "src/core/time_series.h"
+#include "src/cdb_timeseries/time_helpers.h"
+#include "src/cdb_timeseries/time_series.h"
 
 #include "src/cdb_compressor/compressor.h"
 #include "src/cdb_compressor/decompressor.h"
@@ -21,14 +21,14 @@
 #include "CompressBenchmark.h"
 #include "TimeSeriesBenchmark.h"
 
-using namespace cdb::core;
+using namespace cdb::ts;
 
 uint64_t DoubleToUint64(double value)
 {
     return *((uint64_t*)&value);
 }
 
-void run_test(std::vector<ts_point>& expected_points)
+void run_test(std::vector<data_point>& expected_points)
 {
     std::shared_ptr<ts_properties> properties = std::make_shared<ts_properties>();
     std::shared_ptr<time_series> ts = std::make_shared<time_series>(properties);
@@ -42,7 +42,7 @@ int main()
 {
     const int interations = 1000000;
     srand((uint32_t)time(NULL));
-    std::vector<ts_point> m_expected_points;
+    std::vector<data_point> m_expected_points;
 
     uint64_t prev_timestamp = 1;
     for (int i = 0; i < interations; ++i)

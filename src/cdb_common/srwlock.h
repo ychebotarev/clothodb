@@ -1,5 +1,7 @@
 #pragma once
 
+#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
+
 #include <windows.h>
 #include <Synchapi.h>
 
@@ -39,28 +41,6 @@ public:
 
 private:
     RTL_SRWLOCK& m_srwLock;
-};
-
-class SRWLockConditional
-{
-public:
-    SRWLockConditional(bool needLock, RTL_SRWLOCK& srwLock) :
-        m_srwLock(srwLock),
-        m_needLock(needLock)
-    {
-        if(m_needLock)
-            ::AcquireSRWLockExclusive(&m_srwLock);
-    }
-
-    ~SRWLockConditional()
-    {
-        if(m_needLock)
-            ::ReleaseSRWLockExclusive(&m_srwLock);
-    }
-
-private:
-    RTL_SRWLOCK& m_srwLock;
-    bool m_needLock;
 };
 
 }

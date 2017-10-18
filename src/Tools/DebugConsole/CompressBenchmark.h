@@ -2,12 +2,12 @@
 #include <memory>
 
 #include "src/cdb_compressor/bit_stream.h"
-#include "src/core/ts_point.h"
+#include "src/cdb_timeseries/data_point.h"
 
 class CompressBenchmark
 {
 public:
-    CompressBenchmark(std::vector<cdb::core::ts_point>& expected_points)
+    CompressBenchmark(std::vector<cdb::ts::data_point>& expected_points)
         : m_expected_points(expected_points)
     {}
 
@@ -19,5 +19,5 @@ public:
     uint64_t RunIntegerDecompressTest(cdb::compressor::bit_stream& stream);
     uint64_t RunDoubleDecompressTest(cdb::compressor::bit_stream& stream);
 private:
-    std::vector<cdb::core::ts_point>& m_expected_points;
+    std::vector<cdb::ts::data_point>& m_expected_points;
 };

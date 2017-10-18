@@ -11,12 +11,12 @@
 #include "CompressBenchmark.h"
 
 #include "src/cdb_common/time_fmt.h"
-#include "src/core/time_helpers.h"
-#include "src/core/time_series.h"
+#include "src/cdb_timeseries/time_helpers.h"
+#include "src/cdb_timeseries/time_series.h"
 #include "src/cdb_compressor/compressor.h"
 #include "src/cdb_compressor/decompressor.h"
 
-using namespace cdb::core;
+using namespace cdb::ts;
 using namespace cdb::compressor;
 
 uint64_t CompressBenchmark::RunTimestampCompressTest(bit_stream& stream)

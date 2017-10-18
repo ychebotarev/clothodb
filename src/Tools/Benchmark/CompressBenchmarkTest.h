@@ -1,15 +1,15 @@
 #pragma once
 
-#include "src/core/ts_point.h"
+#include "src/cdb_timeseries/data_point.h"
 
 #undef min
 #undef max
-#include "src\3rdparty\hayai\src\hayai.hpp"
+#include "src/3rdparty/hayai/src/hayai.hpp"
 
 class CompressBenchmarkTest
 {
 public:
-    CompressBenchmarkTest(std::vector<cdb::core::ts_point>& expected_points)
+    CompressBenchmarkTest(std::vector<cdb::ts::data_point>& expected_points)
         : m_expected_points(expected_points)
     {}
 
@@ -17,7 +17,7 @@ public:
     void RunIntegerCompressTest();
 
 private:
-    std::vector<cdb::core::ts_point>& m_expected_points;
+    std::vector<cdb::ts::data_point>& m_expected_points;
 };
 
 class CompressBenchmarkFixture
@@ -34,7 +34,7 @@ public:
     CompressBenchmarkTest* m_test;
 
 protected:
-    std::vector<cdb::core::ts_point> m_expected_points;
+    std::vector<cdb::ts::data_point> m_expected_points;
 };
 
 

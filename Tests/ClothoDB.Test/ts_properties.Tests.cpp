@@ -5,9 +5,9 @@
 #include "CppUnitTest.h"
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
-#include "src/core/ts_properties.h"
+#include "src/cdb_timeseries/ts_properties.h"
 
-using namespace cdb::core;
+using namespace cdb::ts;
 
 namespace ClothDBTest
 {
@@ -62,7 +62,7 @@ namespace ClothDBTest
             t1.m_tags["b1"] = "b1";
             result = t1.compare(t2);
             Assert::IsFalse(result);
-            
+
             //same metric name, same tags size, different tags values
             t1.m_tags.clear();
             t2.m_tags.clear();
@@ -73,7 +73,7 @@ namespace ClothDBTest
             t2.m_tags["b1"] = "b2";
             result = t1.compare(t2);
             Assert::IsFalse(result);
-            
+
             //same metric name, same tags size, different tags keys
             t1.m_tags.clear();
             t2.m_tags.clear();

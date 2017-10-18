@@ -4,11 +4,11 @@
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 #include "src/cdb_common/constants.h"
-#include "src/core/time_helpers.h"
-#include "src/core/time_series.h"
+#include "src/cdb_timeseries/time_helpers.h"
+#include "src/cdb_timeseries/time_series.h"
 
 using namespace cdb;
-using namespace cdb::core;
+using namespace cdb::ts;
 
 namespace ClothDBTest
 {
@@ -19,7 +19,7 @@ namespace ClothDBTest
         {
             auto properties = CreateProperties();
             time_series timeSeries(properties);
-            std::vector<ts_point> expected_points{ { 1, 1000 },{ 2, 2000 } };
+            std::vector<data_point> expected_points{ { 1, 1000 },{ 2, 2000 } };
             for (auto &point : expected_points)
             {
                 timeSeries.add_value(point.value, point.timestamp);
@@ -46,7 +46,7 @@ namespace ClothDBTest
         {
             auto properties = CreateProperties();
             time_series timeSeries(properties);
-            std::vector<ts_point> expected_points{ { 0, 1000 } };
+            std::vector<data_point> expected_points{ { 0, 1000 } };
             for (auto &point : expected_points)
             {
                 timeSeries.add_value(point.value, point.timestamp);
@@ -62,7 +62,7 @@ namespace ClothDBTest
             auto properties = CreateProperties();
             properties->m_type = ts_type::TypeDouble;
             time_series timeSeries(properties);
-            std::vector<ts_point> expected_points{ { 0, 1000 } };
+            std::vector<data_point> expected_points{ { 0, 1000 } };
             for (auto &point : expected_points)
             {
                 timeSeries.add_value(point.value, point.timestamp);
@@ -79,7 +79,7 @@ namespace ClothDBTest
             properties->m_type = ts_type::TypeDouble;
             properties->m_store_milliseconds = true;
             time_series timeSeries(properties);
-            std::vector<ts_point> expected_points{ { 0, 1001 } };
+            std::vector<data_point> expected_points{ { 0, 1001 } };
             for (auto &point : expected_points)
             {
                 timeSeries.add_value(point.value, point.timestamp);
@@ -96,7 +96,7 @@ namespace ClothDBTest
             auto properties = CreateProperties();
             properties->m_type = ts_type::TypeDouble;
             time_series timeSeries(properties);
-            std::vector<ts_point> expected_points{ { 0, 1000 } };
+            std::vector<data_point> expected_points{ { 0, 1000 } };
             for (auto &point : expected_points)
             {
                 timeSeries.add_value(point.value, point.timestamp);
@@ -114,7 +114,7 @@ namespace ClothDBTest
             properties->m_type = ts_type::TypeInteger;
             time_series timeSeries(properties);
             uint64_t startTime = 1000;
-            std::vector<ts_point> expected_points;
+            std::vector<data_point> expected_points;
             for (int hour = 0; hour < 2; ++hour)
             {
                 for (int minute = 0; minute < 60; ++minute)
@@ -143,7 +143,7 @@ namespace ClothDBTest
             time_series timeSeries(properties);
             uint64_t startTime = 1000;
 
-            std::vector<ts_point> expected_points;
+            std::vector<data_point> expected_points;
             for (int hour = 0; hour <= Constants::kMaxBuckets; ++hour)
             {
                 for (int minute = 0; minute < 60; ++minute)
@@ -170,7 +170,7 @@ namespace ClothDBTest
             time_series timeSeries(properties);
             uint64_t startTime = 1000;
 
-            std::vector<ts_point> expected_points;
+            std::vector<data_point> expected_points;
             for (int hour = 0; hour <= Constants::kMaxBuckets; ++hour)
             {
                 for (int minute = 0; minute < 60; ++minute)
@@ -194,19 +194,19 @@ namespace ClothDBTest
 
         TEST_METHOD(time_series_tests_resolution)
         {
-            time_series_tests_scale(ts_scale::one_sec);
-            time_series_tests_scale(ts_scale::one_min);
-            time_series_tests_scale(ts_scale::five_sec);
-            time_series_tests_scale(ts_scale::five_min);
+            time_series_tests_resolution(ts_resolution::one_sec);
+            time_series_tests_resolution(ts_resolution::one_min);
+            time_series_tests_resolution(ts_resolution::five_sec);
+            time_series_tests_resolution(ts_resolution::five_min);
         }
 
-        void time_series_tests_scale(ts_scale scale)
+        void time_series_tests_resolution(ts_resolution resolution)
         {
             auto properties = CreateProperties();
-            properties->m_scale = scale;
+            properties->m_resolution = resolution;
             time_series timeSeries(properties);
-            auto scale_in_ms = time_helpers::scale_in_ms(properties->m_scale);
-            std::vector<ts_point> expected_points{ { 0, 2 * scale_in_ms } };
+            auto scale_in_ms = time_helpers::resolution_in_ms(properties->m_resolution);
+            std::vector<data_point> expected_points{ { 0, 2 * scale_in_ms } };
             for (auto &point : expected_points)
             {
                 timeSeries.add_value(point.value, point.timestamp + 10);
@@ -232,8 +232,8 @@ namespace ClothDBTest
         }
 
         void compare_vectors(
-            const std::vector<ts_point>& expectedValues, 
-            const std::vector<ts_point>& actualValues)
+            const std::vector<data_point>& expectedValues,
+            const std::vector<data_point>& actualValues)
         {
             Assert::AreEqual(expectedValues.size(), actualValues.size());
             for (int i = 0; i < expectedValues.size(); ++i)

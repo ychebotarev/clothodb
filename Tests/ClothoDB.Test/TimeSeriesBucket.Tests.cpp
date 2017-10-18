@@ -7,14 +7,14 @@
 #include "CppUnitTest.h"
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
-#include "src/core/ts_bucket.h"
-#include "src/core/time_helpers.h"
+#include "src/cdb_timeseries/ts_bucket.h"
+#include "src/cdb_timeseries/time_helpers.h"
 
-using namespace cdb::core;
+using namespace cdb::ts;
 
 namespace ClothDBTest
 {
-    using ts_points = std::vector<ts_point>;
+    using data_points = std::vector<data_point>;
 
     TEST_CLASS(time_series_bucket_tests)
     {
@@ -23,8 +23,8 @@ namespace ClothDBTest
         {
             auto properties = get_properties();
             ts_bucket bucket(properties);
-            ts_points actual_points;
-            ts_points expected_points{ {1, 1000}, {2, 2000} };
+            data_points actual_points;
+            data_points expected_points{ {1, 1000}, {2, 2000} };
             for (auto &point : expected_points)
             {
                 bucket.add_value(point.value, (uint32_t) point.timestamp / 1000, 0);
@@ -38,7 +38,7 @@ namespace ClothDBTest
         {
             auto properties = get_properties();
             ts_bucket bucket(properties);
-            ts_points actual_points;
+            data_points actual_points;
             bucket.decompress(actual_points, 0, 0, std::numeric_limits<uint32_t>::max());
 
             Assert::IsTrue(actual_points.size() == 0);
@@ -48,8 +48,8 @@ namespace ClothDBTest
         {
             auto properties = get_properties();
             ts_bucket bucket(properties);
-            ts_points actual_points;
-            ts_points expected_points{ { 1,1000 }};
+            data_points actual_points;
+            data_points expected_points{ { 1,1000 }};
             for (auto &point : expected_points)
             {
                 bucket.add_value(point.value, (uint32_t)point.timestamp / 1000, 0);
@@ -64,8 +64,8 @@ namespace ClothDBTest
             auto properties = get_properties();
             properties.m_store_milliseconds = true;
             ts_bucket bucket(properties);
-            ts_points actual_points;
-            ts_points expected_points{ { 1,1001 },{ 2,2002 } };
+            data_points actual_points;
+            data_points expected_points{ { 1,1001 },{ 2,2002 } };
             for (auto &point : expected_points)
             {
                 bucket.add_value(point.value, (uint32_t)point.timestamp / 1000, point.timestamp % 1000);
@@ -81,8 +81,8 @@ namespace ClothDBTest
             properties.m_store_milliseconds = true;
             properties.m_type = ts_type::TypeDouble;
             ts_bucket bucket(properties);
-            ts_points actual_points;
-            ts_points expected_points{ { DoubleToUint64(1.1), 1001 }};
+            data_points actual_points;
+            data_points expected_points{ { DoubleToUint64(1.1), 1001 }};
             for (auto &point : expected_points)
             {
                 bucket.add_value(point.value, (uint32_t)point.timestamp / 1000, point.timestamp % 1000);
@@ -99,8 +99,8 @@ namespace ClothDBTest
             properties.m_store_milliseconds = true;
             properties.m_type = ts_type::TypeDouble;
             ts_bucket bucket(properties);
-            ts_points actual_points;
-            ts_points expected_points
+            data_points actual_points;
+            data_points expected_points
             { 
                 { DoubleToUint64(1.1), 1001 },
                 { DoubleToUint64(2.2), 2002 },
@@ -124,7 +124,7 @@ namespace ClothDBTest
             return properties;
         }
 
-        void compare_vectors(const ts_points& expectedValues, const ts_points& actualValues)
+        void compare_vectors(const data_points& expectedValues, const data_points& actualValues)
         {
             Assert::AreEqual(expectedValues.size(), actualValues.size());
             for (int i = 0; i < expectedValues.size(); ++i)

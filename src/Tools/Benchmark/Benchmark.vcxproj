@@ -172,7 +172,7 @@
     <ProjectReference Include="..\..\cdb_compressor\cdb_compressor.vcxproj">
       <Project>{9ffe9725-7e77-48bd-851a-9a9e23e9a04f}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\core\core.vcxproj">
+    <ProjectReference Include="..\..\cdb_timeseries\cdb_timeseries.vcxproj">
       <Project>{2778b793-150e-4b50-a407-a693b6d60b43}</Project>
     </ProjectReference>
   </ItemGroup>
