@@ -1,0 +1,51 @@
+
+enum TsType:byte { TypeDouble = 0, TypeInteger = 1 }
+enum TsResolution:byte { OneSec = 0, FiveSec = 1, OneMin = 2, FiveMin = 3 }
+
+table MetricTag {
+	tag_key: string;
+	tag_value: string;
+}
+
+table CreateNamespace {
+	namespace_name: string;
+}
+
+table DeleteNamespace {
+	namespace_name: string;
+}
+
+table CreateTimeseries {
+  	namespace_name: string;
+  	metric_name: string;
+	tags: [MetricTag];
+    tsType: TsType;
+	tsResolution: TsResolution;
+}
+
+table DeleteTimeseries {
+  	namespace_name: string;
+  	metric_name: string;
+	tags: [MetricTag];
+}
+
+struct AddValue {
+	uid: ulong;
+	value: ulong;
+	timestamp: ulong; 
+}
+
+union LogEntry {
+  CreateNamespace,
+  DeleteNamespace,
+  CreateTimeseries,
+  DeleteTimeseries,
+  AddValue
+}
+
+table Log {
+  entries: [LogEntry];
+}
+
+root_type Log;
+file_identifier "CLDB";
