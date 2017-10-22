@@ -11,7 +11,7 @@ namespace cdb {
 class serialize_block
 {
 public:
-    serialize_block(int capacity) : m_capacity(capacity)
+    serialize_block(size_t capacity) : m_capacity(capacity)
     {
         m_buffer = std::make_unique<char[]>(m_capacity);
     }

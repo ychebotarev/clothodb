@@ -3,7 +3,7 @@
 #include <fstream>
 #include <iostream>
 
-#include "src/cdb_timeseries/time_helpers.h"
+#include "src/cdb_common/time_helpers.h"
 #include "src/cdb_timeseries/time_series.h"
 
 #undef min

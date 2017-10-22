@@ -16,7 +16,7 @@ int main()
 
     hayai::ConsoleOutputter consoleOutputter;
     hayai::JsonOutputter jsonOutputter(ofs);
-    
+
     hayai::Benchmarker::AddOutputter(consoleOutputter);
     hayai::Benchmarker::AddOutputter(jsonOutputter);
     hayai::Benchmarker::RunAllTests();

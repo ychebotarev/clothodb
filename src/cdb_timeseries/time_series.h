@@ -2,6 +2,7 @@
 #include "src/cdb_common/srwlock.h"
 
 #include "src/cdb_common/common.h"
+#include "src/cdb_common/serialize_block.h"
 
 #include "src/cdb_timeseries/ts_properties.h"
 #include "src/cdb_timeseries/ts_bucket.h"
@@ -29,6 +30,8 @@ public:
     size_t stored_hours() const { return active_buckets_count(); }
 
     ts_properties_ptr get_properties() { return m_properties; }
+
+    void serialize(cdb::serialize_block& block);
 protected:
     size_t active_buckets_count() const;
 private:
@@ -36,7 +39,6 @@ private:
     
     //circullar buffer related functions
     void normalize_index(size_t& index) const;
-
 
     void set_head_index(size_t index);
     void set_tail_index(size_t index);

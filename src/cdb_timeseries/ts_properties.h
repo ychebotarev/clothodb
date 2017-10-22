@@ -15,6 +15,7 @@ struct ts_properties
         m_type = ts_type::TypeInteger;
         m_resolution = ts_resolution::one_sec;
         m_store_milliseconds = false;
+        m_resolution1 = 1000;
     }
 
     ts_properties(const ts_properties& prop)
@@ -59,6 +60,7 @@ struct ts_properties
 
     ts_type m_type;
     ts_resolution m_resolution;
+    uint64_t m_resolution1;
     bool m_store_milliseconds;
 
     std::string m_metric;

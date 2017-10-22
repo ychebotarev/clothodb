@@ -6,17 +6,6 @@
 namespace cdb{
 namespace ts{
 
-uint64_t time_helpers::scale_timestamp(uint64_t timestamp, ts_resolution resolution)
-{
-    int step = (int)resolution;
-    return (timestamp + step / 2) / step;
-}
-
-uint32_t time_helpers::resolution_in_ms(ts_resolution resolution)
-{
-    return (int)resolution;
-}
-
 uint64_t time_helpers::make_timestamp(int year, int month, int day, int hour, int minute, int seconds, int milliseconds)
 {
     tm t = {};

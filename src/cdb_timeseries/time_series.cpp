@@ -4,8 +4,7 @@
 
 #include "src/cdb_common/constants.h"
 #include "src/cdb_common/error_codes.h"
-
-#include "src/cdb_timeseries/time_helpers.h"
+#include "src/cdb_common/time_helpers.h"
 
 namespace cdb{
 namespace ts{
@@ -13,16 +12,47 @@ namespace ts{
 using namespace std;
 using namespace cdb;
 
-uint32_t get_hours_per_bucket(ts_resolution resolution)
+__forceinline int resolution_in_ms(ts_resolution resolution)
+{
+    return (int)resolution;
+}
+
+__forceinline uint64_t scale_timestamp(uint64_t timestamp, ts_resolution resolution)
+{
+    if (resolution == ts_resolution::one_sec)
+    {
+        timestamp += 500;
+        timestamp /= 1000;
+    }
+    else if (resolution == ts_resolution::five_sec)
+    {
+        timestamp += 2500;
+        timestamp /= 5000;
+    }
+    else if (resolution == ts_resolution::one_min)
+    {
+        timestamp += 30000;
+        timestamp /= 60000;
+    }
+    else if (resolution == ts_resolution::five_min)
+    {
+        timestamp += 150000;
+        timestamp /= 300000;
+    }
+
+    return timestamp;
+}
+
+__forceinline uint32_t get_hours_per_bucket(ts_resolution resolution)
 {
     return Constants::kBucketSize 
-        * time_helpers::resolution_in_ms(resolution)
+        * resolution_in_ms(resolution)
         / Constants::kOneHourInMs;
 }
 
-uint32_t get_milliseconds_in_bucket(ts_resolution resolution)
+__forceinline uint32_t get_milliseconds_in_bucket(ts_resolution resolution)
 {
-    return Constants::kBucketSize * time_helpers::resolution_in_ms(resolution);
+    return Constants::kBucketSize * resolution_in_ms(resolution);
 }
 
 time_series::time_series(ts_properties_ptr properties)
@@ -44,7 +74,7 @@ ts_bucket_ptr time_series::create_bucket()
 
 bool time_series::add_value(uint64_t value, uint64_t timestamp)
 {
-    auto timestamp_scaled = time_helpers::scale_timestamp(
+    auto timestamp_scaled = scale_timestamp(
         timestamp, 
         m_properties->m_resolution);
 
@@ -63,7 +93,7 @@ bool time_series::add_value(uint64_t value, uint64_t timestamp)
     }
 
     auto hours_per_bucket = get_hours_per_bucket(m_properties->m_resolution);
-    auto scale_in_ms = time_helpers::resolution_in_ms(m_properties->m_resolution);
+    auto scale_in_ms = resolution_in_ms(m_properties->m_resolution);
     auto bucket_in_ms = hours_per_bucket * Constants::kOneHourInMs;
     
     uint64_t tail_bucket_start_ms = m_head_start_ms 
@@ -76,7 +106,7 @@ bool time_series::add_value(uint64_t value, uint64_t timestamp)
         tail_bucket_start_ms += bucket_in_ms;
     }
 
-    timestamp_scaled -= time_helpers::scale_timestamp(
+    timestamp_scaled -= scale_timestamp(
         tail_bucket_start_ms,
         m_properties->m_resolution);
 
@@ -93,7 +123,7 @@ data_points time_series::get_points(uint64_t start_time, uint64_t end_time)
 {
     auto result = make_shared<vector<data_point>>();
     if (is_empty()) return data_points::from_value(result);
-    //result->reserve(20000);
+    //result->reserve(90000);
     try
     {
         int index = 0;
@@ -245,6 +275,14 @@ void time_series::move_tail_forward()
     }
     move_index_forward(m_tail_index);
     m_head_start_ms += get_milliseconds_in_bucket(m_properties->m_resolution);
+}
+
+void time_series::serialize(serialize_block& block)
+{
+    for (auto& bucket : m_buckets)
+    {
+        bucket->serialize(block);
+    }
 }
 
 }}

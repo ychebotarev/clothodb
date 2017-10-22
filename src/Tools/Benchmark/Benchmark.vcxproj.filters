@@ -11,9 +11,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -23,7 +20,7 @@
     <ClInclude Include="LoadTimeSeriesBenchmark.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CompressBenchmarkTest.h">
+    <ClInclude Include="data_point_provider.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -38,6 +35,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CompressBenchmarkTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TimeSeriesBenchmark.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BucketBenchmark.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="data_point_provider.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

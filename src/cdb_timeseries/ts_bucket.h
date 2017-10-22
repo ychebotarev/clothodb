@@ -1,6 +1,7 @@
 #pragma once
 
 #include "src/cdb_common/common.h"
+#include "src/cdb_common/serialize_block.h"
 
 #include "src/cdb_compressor/bit_stream.h"
 #include "src/cdb_compressor/compressor.h"
@@ -29,8 +30,16 @@ public:
     void seal();
     bool is_sealed() const { return m_sealed; };
 
-    compressor::bit_stream_reader get_stream_reader() const { return compressor::bit_stream_reader(m_stream); }
+    cdb::compressor::bit_stream_reader get_stream_reader() const { return cdb::compressor::bit_stream_reader(m_stream); }
+    cdb::compressor::bit_stream_writer get_stream_writer() { return cdb::compressor::bit_stream_writer(m_stream); }
+    cdb::compressor::bit_stream& get_stream() { return m_stream; }
+    std::unique_ptr<cdb::compressor::timestamp_compressor>& get_timestamp_compressor() { return m_timestamp_compressor; }
+    std::unique_ptr<cdb::compressor::value_compressor>& get_value_compressor() { return m_value_compressor; }
+
     uint32_t get_commited_bits() const { return m_stream.get_commited_bits(); }
+
+    void serialize(cdb::serialize_block& block);
+
 private:
     cdb::compressor::bit_stream m_stream;
     cdb::compressor::bit_stream_writer m_stream_writer;

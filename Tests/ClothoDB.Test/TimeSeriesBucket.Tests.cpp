@@ -7,8 +7,8 @@
 #include "CppUnitTest.h"
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
+#include "src/cdb_common/time_helpers.h"
 #include "src/cdb_timeseries/ts_bucket.h"
-#include "src/cdb_timeseries/time_helpers.h"
 
 using namespace cdb::ts;
 

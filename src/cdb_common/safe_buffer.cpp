@@ -14,7 +14,7 @@ bool safe_buffer::write(void* data, size_t size)
     for(;;)
     {
         auto old_position = m_position;
-        int expected_position = old_position + size;
+        auto expected_position = old_position + size;
         if (expected_position> m_capacity) return false;
         auto current_position = 
             ::InterlockedCompareExchange(&m_position, expected_position, old_position);
@@ -30,7 +30,7 @@ char* safe_buffer::allocate(size_t size)
     for (;;)
     {
         auto old_position = m_position;
-        int expected_position = old_position + size;
+        auto expected_position = old_position + size;
         if (expected_position > m_capacity) return nullptr;
         auto current_position =
             ::InterlockedCompareExchange(&m_position, expected_position, old_position);

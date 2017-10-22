@@ -4,7 +4,7 @@
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 #include "src/cdb_common/constants.h"
-#include "src/cdb_timeseries/time_helpers.h"
+#include "src/cdb_common/time_helpers.h"
 #include "src/cdb_timeseries/time_series.h"
 
 using namespace cdb;
@@ -205,8 +205,8 @@ namespace ClothDBTest
             auto properties = CreateProperties();
             properties->m_resolution = resolution;
             time_series timeSeries(properties);
-            auto scale_in_ms = time_helpers::resolution_in_ms(properties->m_resolution);
-            std::vector<data_point> expected_points{ { 0, 2 * scale_in_ms } };
+            auto scale_in_ms = (int)(properties->m_resolution);
+            std::vector<data_point> expected_points{ { 0, (uint64_t)2 * scale_in_ms } };
             for (auto &point : expected_points)
             {
                 timeSeries.add_value(point.value, point.timestamp + 10);

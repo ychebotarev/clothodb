@@ -11,7 +11,7 @@
 #include "CompressBenchmark.h"
 
 #include "src/cdb_common/time_fmt.h"
-#include "src/cdb_timeseries/time_helpers.h"
+#include "src/cdb_common/time_helpers.h"
 #include "src/cdb_timeseries/time_series.h"
 #include "src/cdb_compressor/compressor.h"
 #include "src/cdb_compressor/decompressor.h"

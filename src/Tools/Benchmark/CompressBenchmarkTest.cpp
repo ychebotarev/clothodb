@@ -1,58 +1,118 @@
 #include "stdafx.h"
-#include <stdlib.h>
 
-#include "CompressBenchmarkTest.h"
+#include "src/cdb_timeseries/data_point.h"
 #include "src/cdb_compressor/compressor.h"
+#include "data_point_provider.h"
+
+#include "src/cdb_timeseries/ts_properties.h"
+#include "src/cdb_timeseries/ts_bucket.h"
+
+#include "src/3rdparty/hayai/src/hayai.hpp"
 
 using namespace cdb::compressor;
+using namespace cdb::ts;
+using namespace std;
 
-void CompressBenchmarkTest::RunTimestampCompressTest()
+class CompressBenchmarkFixture
+    : public ::hayai::Fixture
 {
-    bit_stream stream(10000000);
-    bit_stream_writer writer(stream);
-    timestamp_compressor compressor(writer);
-
-    compressor.append_first_value(0);
-    for (auto& point : m_expected_points)
+public:
+    virtual void SetUp()
     {
-        compressor.append_next_value((uint32_t)point.timestamp);
+        auto& data_points = data_point_provider::get_points();
+        m_stream = std::shared_ptr<bit_stream>(new bit_stream(1000000));
     }
-}
 
-void CompressBenchmarkTest::RunIntegerCompressTest()
-{
-    bit_stream stream(10000000);
-    bit_stream_writer writer(stream);
-    integer_compressor compressor(writer);
+    virtual void TearDown()
+    {}
 
-    compressor.append_first_value(0);
-    for (auto& point : m_expected_points)
+    void RunTimestampCompressTest()
     {
-        compressor.append_next_value(point.value);
+        auto& data_points = data_point_provider::get_points();
+        bit_stream_writer writer(*m_stream.get());
+        timestamp_compressor compressor(writer);
+
+        compressor.append_first_value(0);
+        for (auto& point : data_points)
+        {
+            compressor.append_next_value((uint32_t)point.timestamp);
+        }
     }
-}
 
-void CompressBenchmarkFixture::SetUp()
-{
-    srand((uint32_t)time(NULL));
-    m_expected_points.clear();
-
-    uint64_t prev_timestamp = 1;
-    for (int i = 0; i < 1000000; ++i)
+    void RunIntegerCompressTest()
     {
-        uint64_t value = rand() % 1000000;
-        m_expected_points.push_back({ prev_timestamp * 1000, value });
-        prev_timestamp += rand() % 3;
+        auto& data_points = data_point_provider::get_points();
+        bit_stream_writer writer(*m_stream.get());
+        integer_compressor compressor(writer);
+
+        compressor.append_first_value(0);
+        for (auto& point : data_points)
+        {
+            compressor.append_next_value(point.value);
+        }
     }
-    m_test = new CompressBenchmarkTest(m_expected_points);
-}
 
-BENCHMARK_F(CompressBenchmarkFixture, RunTimestampCompressTest, 5, 100)
-{
-    m_test->RunTimestampCompressTest();
-}
+    void RunTimestampAndIntegerCompressTest()
+    {
+        shared_ptr<bit_stream> stream(new bit_stream(1000000));
 
-BENCHMARK_F(CompressBenchmarkFixture, RunIntegerCompressTest, 5, 100)
-{
-    m_test->RunIntegerCompressTest();
-}
+        RunTimestampAndIntegerCompressTest(*stream.get());
+    }
+    
+    void RunTimestampAndIntegerCompressTestPreAllocate()
+    {
+        RunTimestampAndIntegerCompressTest(*m_stream.get());
+    }
+
+    void RunTimestampAndIntegerCompressTest(bit_stream& stream)
+    {
+        auto& data_points = data_point_provider::get_points();
+        bit_stream_writer writer(stream);
+
+        timestamp_compressor timestampCompressor(writer);
+        integer_compressor integerCompressor(writer);
+
+        for (auto& point : data_points)
+        {
+            bool first_value = stream.is_empty();
+
+            if (first_value)
+            {
+                timestampCompressor.append_first_value((uint32_t)point.timestamp / 1000);
+                integerCompressor.append_first_value(point.value);
+            }
+            else
+            {
+                timestampCompressor.append_next_value((uint32_t)point.timestamp / 1000);
+                integerCompressor.append_next_value(point.value);
+            }
+
+            writer.commit();
+        }
+    }
+
+protected:
+    shared_ptr<bit_stream> m_stream;
+};
+
+//BENCHMARK_F(CompressBenchmarkFixture, TimestampCompressTest, 5, 20)
+//{
+//    RunTimestampCompressTest();
+//}
+//
+//BENCHMARK_F(CompressBenchmarkFixture, IntegerCompressTest, 5, 20)
+//{
+//    RunIntegerCompressTest();
+//}
+//
+
+//BENCHMARK_F(CompressBenchmarkFixture, TimestampAndIntegerCompressTest1, 2, 10)
+//{
+//    RunTimestampAndIntegerCompressTest();
+//}
+//
+//BENCHMARK_F(CompressBenchmarkFixture, TimestampAndIntegerCompressTestPreAllocate, 2, 10)
+//{
+//    RunTimestampAndIntegerCompressTestPreAllocate();
+//}
+

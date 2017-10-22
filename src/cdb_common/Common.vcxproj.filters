@@ -56,7 +56,10 @@
     <ClInclude Include="not_implemented_exception.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\cdb_timeseries\time_helpers.h">
+    <ClInclude Include="time_helpers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stop_watch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -73,7 +76,7 @@
     <ClCompile Include="serialize_block.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\cdb_timeseries\time_helpers.cpp">
+    <ClCompile Include="time_helpers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,8 +1,8 @@
 #include "src/cdb_common/constants.h"
+#include "src/cdb_common/time_helpers.h"
 #include "src/cdb_compressor/decompressor.h"
 
 #include "src/cdb_timeseries/ts_bucket.h"
-#include "src/cdb_timeseries/time_helpers.h"
 
 namespace cdb{
 namespace ts{
@@ -13,6 +13,7 @@ using namespace compressor;
 
 ts_bucket::ts_bucket(const ts_properties& properties):
     m_properties(properties),
+    m_stream(10000),
     m_sealed(false),
     m_stream_writer(m_stream)
 {
@@ -95,7 +96,7 @@ void ts_bucket::decompress(
     
     timestamp_decompressor timestamp_dcompressor(reader);
     uint64_t timestamp = timestamp_dcompressor.get_first_value();
-    timestamp *= time_helpers::resolution_in_ms(m_properties.m_resolution);
+    timestamp *= (int)(m_properties.m_resolution);
     timestamp += bucket_start_ms;
 
     uint64_t value = value_decompressor->get_first_value();
@@ -112,7 +113,7 @@ void ts_bucket::decompress(
     while (reader.get_position() < toDecompress)
     {
         timestamp = timestamp_dcompressor.get_next_value();
-        timestamp *= time_helpers::resolution_in_ms(m_properties.m_resolution);
+        timestamp *= (int)(m_properties.m_resolution);
         timestamp += bucket_start_ms;
 
         value = value_decompressor->get_next_value();
@@ -134,5 +135,11 @@ void ts_bucket::seal()
 {
     m_sealed = true;
 }
+
+void ts_bucket::serialize(serialize_block& block)
+{
+
+}
+
 
 }}

@@ -12,101 +12,56 @@
 #include <time.h>
 
 #include "src/cdb_common/time_fmt.h"
-#include "src/cdb_timeseries/time_helpers.h"
+#include "src/cdb_common/time_helpers.h"
 #include "src/cdb_timeseries/time_series.h"
 
 #include "src/cdb_compressor/compressor.h"
 #include "src/cdb_compressor/decompressor.h"
 
 #include "CompressBenchmark.h"
-#include "TimeSeriesBenchmark.h"
 
+using namespace cdb;
 using namespace cdb::ts;
+using namespace cdb::compressor;
+using namespace std;
 
 uint64_t DoubleToUint64(double value)
 {
     return *((uint64_t*)&value);
 }
 
-void run_test(std::vector<data_point>& expected_points)
-{
-    std::shared_ptr<ts_properties> properties = std::make_shared<ts_properties>();
-    std::shared_ptr<time_series> ts = std::make_shared<time_series>(properties);
-
-    TimeSeriesBenchmark tsb(ts, properties, expected_points);
-    tsb.RunCompressTest();
-    tsb.RunDecompressTest();
-}
-
 int main()
 {
     const int interations = 1000000;
     srand((uint32_t)time(NULL));
-    std::vector<data_point> m_expected_points;
+    std::vector<data_point> expected_points;
 
     uint64_t prev_timestamp = 1;
     for (int i = 0; i < interations; ++i)
     {
-        uint64_t value = rand() % 1000000;
-        m_expected_points.push_back({ value, prev_timestamp * 1000 });
-        prev_timestamp += rand() % 3;
+
+        uint64_t value = 0;
+        switch (rand() % 3)
+        {
+        case 0: value = rand() % 10;
+        case 1: value = rand() % 100;
+        //case 2: value = rand() % 1000;
+        //case 3: value = rand() % 10000;
+        }
+        
+        expected_points.push_back({ value, prev_timestamp * 1000 });
+        ++prev_timestamp;
+    }
+    auto properties = make_shared<ts_properties>();
+    auto ts = make_shared<time_series>(properties);
+    for (auto& point : expected_points)
+    {
+        ts->add_value(point.value, point.timestamp);
     }
 
-    std::thread th1(run_test, m_expected_points);
-    std::thread th2(run_test, m_expected_points);
-    std::thread th3(run_test, m_expected_points);
-    std::thread th4(run_test, m_expected_points);
+    auto points = ts->get_points();
 
-    th1.join();
-    th2.join();
-    th3.join();
-    th4.join();
-    //{
-    //    std::shared_ptr<ts_properties> properties = std::make_shared<ts_properties>();
-    //    std::shared_ptr<time_series> ts = std::make_shared<time_series>(properties);
-    //    
-    //    TimeSeriesBenchmark tsb(ts, properties, m_expected_points);
-    //    tsb.RunCompressTest();
-    //    tsb.RunDecompressTest();
-    //}
-
-    //{
-    //    //Timestamp compress/decompress
-    //    CompressBenchmark cb(m_expected_points);
-    //    {
-    //        bit_stream stream(10000);
-    //        cb.RunTimestampCompressTest(stream);
-    //        cb.RunTimestampDecompressTest(stream);
-    //    }
-
-    //    //Integer compress/decompress
-    //    {
-    //        bit_stream stream(10000);
-    //        cb.RunIntegerCompressTest(stream);
-    //        cb.RunIntegerDecompressTest(stream);
-    //    }
-    //}
-
-    //m_expected_points.clear();
-    //prev_timestamp = 1;
-    //for (int i = 0; i < interations; ++i)
-    //{
-    //    double value = rand() % 1000000;
-    //    value /= 10;
-    //    m_expected_points.push_back({ prev_timestamp * 1000, DoubleToUint64(value) });
-    //    prev_timestamp += rand() % 3;
-    //}
-
-    //{
-    //    //Double compress/decompress
-    //    CompressBenchmark cb(m_expected_points);
-    //    {
-    //        bit_stream stream(10000);
-    //        cb.RunDoubleCompressTest(stream);
-    //        cb.RunDoubleDecompressTest(stream);
-    //    }
-    //}
-
+    std::cout << "Test complete" << std::endl;
     std::cin.get();
     return 0;
 }

@@ -1,11 +1,11 @@
 #include "ts_synchronizer.h"
 #include "src/cdb_common/constants.h"
+#include "src/cdb_common/time_helpers.h"
 
 namespace cdb{
 namespace ts{
 
 const int one_hour_in_ms = 60 * 60 * 1000;
-Constants::kOneHourInMs;
 
 ts_synchronizer::ts_synchronizer()
 {
